@@ -16,6 +16,7 @@ export const useRecipeSearch = (
   keys: Set<SearchableAttributes>
 ): RecipeUuid[] => {
   const { data: recipes } = useRecipes();
+  console.log('recipes', recipes)
   const searchableRecipes = useMemo(() => {
     // Note: Fuse.js had trouble searching the nested structure for ingredients
     // so I flatten out the recipes here

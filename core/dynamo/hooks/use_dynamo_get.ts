@@ -9,33 +9,34 @@ const useRecipesBase = <T>({
   enabled,
 }: {
   enabled?: boolean;
-  select?: (data: IRecipe[]) => T;
+  select?: (data: IRecipes) => T;
 }) => {
   const { loading } = useAppSession();
   return trpc.recipes.getRecipes.useQuery(
     undefined,
     {
       enabled: !loading && (enabled ?? true),
-      // TODO: Fix this
       select,
     }
   );
 };
 
 export const useRecipes = () => {
-  return useRecipesBase({});
+  return useRecipesBase({
+    select: (data) => data.values().toArray(),
+  });
 };
 
 export const useRecipeIds = () => {
   return useRecipesBase({
-    select: (data) => data.map(recipe => recipe.uuid),
+    select: (data) => data.keys().toArray(),
   });
 };
 
 export const useRecipe = (recipeId?: RecipeUuid, enabled?: boolean) => {
   return useRecipesBase({
     select: (data) => {
-      const recipe = data.find(recipe => recipe.uuid === recipeId!);
+      const recipe = data.get(recipeId!)
       return recipe;
     },
     enabled: enabled && !!recipeId && recipeId !== NewRecipe,

@@ -7,6 +7,7 @@ import {
 import { deleteRecipe, shareRecipe, updateRecipe } from "./mutations";
 import { recipeValidator } from "./validators/recipe";
 import { v4 as uuidv4 } from "uuid";
+import { IInstruction, IRecipe, IRecipeIngredient, IRecipes, Unit } from "../../../core/types/recipes";
 
 export const recipesRouter = router({
   getRecipes: withUser.query(async ({ ctx }) => {
@@ -32,9 +33,41 @@ export const recipesRouter = router({
           },
         },
         orderBy: { createdAt: "desc" },
-      });
+      })
 
-      return recipes;
+      const stuff = recipes.map((recipe): IRecipe => {
+        return {
+          ...recipe,
+          images: recipe.images.map((image): IRecipe['images'][number] => {
+            return {
+              key: image.key,
+              // TODO: Fix when old backend is removed
+              timestamp: image.timestamp as any as number
+            }
+          }),
+          components: recipe.components.map((component): IRecipe['components'][number] => {
+            return {
+              ...component,
+              instructions: component.instructions.map((instruction): IInstruction => {
+                return {
+                  text: instruction.instruction,
+                }
+              }),
+              ingredients: component.ingredients.map((ingredient): IRecipeIngredient => {
+                return {
+                  name: ingredient.name,
+                  quantity: {
+                    unit: ingredient.unit as any as Unit,
+                    value: ingredient.quantity
+                  }
+                }
+              }),
+              servings: component.servings ?? 0
+            }
+          })
+        }
+      })
+      return stuff.reduce((acc, recipe) => acc.set(recipe.uuid, recipe), new Map());
     }
 
     return getRecipesForUser({ user: ctx.session.id })
@@ -68,8 +101,13 @@ export const recipesRouter = router({
           ctx.db.recipe.create({
             data: {
               createdBy: {
-                connect: {
-                  id: ctx.session.id,
+                connectOrCreate: {
+                  create: {
+                    id: ctx.session.id,
+                  },
+                  where: {
+                    id: ctx.session.id,
+                  }
                 }
               },
               ...recipeWithoutImages,

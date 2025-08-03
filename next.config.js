@@ -68,6 +68,7 @@ module.exports = withSentryConfig(
           ]
         }
       },
+      transpilePackages: ["next-auth"],
       images: {
         remotePatterns: [
           {

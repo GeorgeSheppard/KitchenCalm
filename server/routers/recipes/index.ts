@@ -2,12 +2,12 @@ import { z } from "zod";
 import { publicProcedure, router, withUser } from "../../trpc";
 import {
   getRecipesForUser,
-  getSharedRecipe,
 } from "./queries";
-import { deleteRecipe, shareRecipe, updateRecipe } from "./mutations";
+import { deleteRecipe, updateRecipe } from "./mutations";
 import { recipeValidator } from "./validators/recipe";
 import { v4 as uuidv4 } from "uuid";
-import { IInstruction, IRecipe, IRecipeIngredient, IRecipes, Unit } from "../../../core/types/recipes";
+
+const sharedUser = "share"
 
 export const recipesRouter = router({
   getRecipes: withUser.query(async ({ ctx }) => {
@@ -32,42 +32,9 @@ export const recipesRouter = router({
             },
           },
         },
-        orderBy: { createdAt: "desc" },
       })
 
-      const stuff = recipes.map((recipe): IRecipe => {
-        return {
-          ...recipe,
-          images: recipe.images.map((image): IRecipe['images'][number] => {
-            return {
-              key: image.key,
-              // TODO: Fix when old backend is removed
-              timestamp: image.timestamp as any as number
-            }
-          }),
-          components: recipe.components.map((component): IRecipe['components'][number] => {
-            return {
-              ...component,
-              instructions: component.instructions.map((instruction): IInstruction => {
-                return {
-                  text: instruction.instruction,
-                }
-              }),
-              ingredients: component.ingredients.map((ingredient): IRecipeIngredient => {
-                return {
-                  name: ingredient.name,
-                  quantity: {
-                    unit: ingredient.unit as any as Unit,
-                    value: ingredient.quantity
-                  }
-                }
-              }),
-              servings: component.servings ?? 0
-            }
-          })
-        }
-      })
-      return stuff.reduce((acc, recipe) => acc.set(recipe.uuid, recipe), new Map());
+      return recipes.reduce((acc, recipe) => acc.set(recipe.uuid, recipe), new Map());
     }
 
     return getRecipesForUser({ user: ctx.session.id })
@@ -79,7 +46,7 @@ export const recipesRouter = router({
         return ctx.db.recipe.delete({
           where: {
             createdById: ctx.session.id,
-            id: recipeId
+            uuid: recipeId
           },
         });
       }
@@ -88,51 +55,39 @@ export const recipesRouter = router({
   updateRecipe: withUser
     .input(z.object({ recipe: recipeValidator }))
     .mutation(({ ctx, input: { recipe } }) => {
+      console.log("updateRecipe", recipe)
       if (ctx.usePrisma) {
-        console.log('recipe', recipe.uuid)
+
+      /**
+       * issue creating recipe when you aren't logged in
+       */
+
         const { images, ...recipeWithoutImages } = recipe
         return ctx.db.$transaction([
           ctx.db.recipe.deleteMany({
             where: {
               createdById: ctx.session.id,
-              id: recipe.uuid
+              uuid: recipe.uuid
             }
           }),
           ctx.db.recipe.create({
             data: {
-              createdBy: {
-                connectOrCreate: {
-                  create: {
-                    id: ctx.session.id,
-                  },
-                  where: {
-                    id: ctx.session.id,
-                  }
-                }
-              },
               ...recipeWithoutImages,
               components: {
-                create: recipeWithoutImages.components.map(component => {
+                create: recipeWithoutImages.components.map((component, index) => {
                   return {
                     ...component,
+                    order: index,
                     instructions: {
-                      create: component.instructions.map((instruction, order) => ({
-                        uuid: uuidv4(),
-                        instruction: instruction.text,
-                        order
-                      }))
+                      create: component.instructions.map((instruction, index) => ({ ...instruction, uuid: uuidv4(), order: index }))
                     },
                     ingredients: {
-                      create: component.ingredients.map(ingredient => ({
-                        name: ingredient.name,
-                        quantity: ingredient.quantity.value ?? 0,
-                        unit: ingredient.quantity.unit,
-                        uuid: uuidv4()
-                      }))
+                      create: component.ingredients.map((ingredient, index) => ({ ...ingredient, uuid: uuidv4(), order: index }))
                     }
                   }
                 })
-              }
+              },
+              createdById: ctx.session.id
             }
           })
         ]);
@@ -142,8 +97,55 @@ export const recipesRouter = router({
     }),
   createSharedRecipe: publicProcedure
     .input(z.object({ recipe: recipeValidator }))
-    .mutation(({ input: { recipe } }) => shareRecipe(uuidv4(), recipe)),
+    .mutation(async ({ ctx, input: { recipe } }) => {
+      const id = uuidv4()
+      const { images, ...recipeWithoutImages } = recipe
+      await ctx.db.recipe.create({
+        data: {
+          ...recipeWithoutImages,
+          components: {
+            create: recipeWithoutImages.components.map((component, index) => {
+              return {
+                ...component,
+                order: index,
+                instructions: {
+                  create: component.instructions.map((instruction, index) => ({ ...instruction, uuid: uuidv4(), order: index }))
+                },
+                ingredients: {
+                  create: component.ingredients.map((ingredient, index) => ({ ...ingredient, uuid: uuidv4(), order: index }))
+                }
+              }
+            })
+          },
+          createdById: sharedUser
+        }
+      })
+      return id
+    }),
   getSharedRecipe: publicProcedure
     .input(z.object({ share: z.string() }))
-    .query(({ input: { share } }) => getSharedRecipe({ id: share })),
+    .query(async ({ ctx, input: { share } }) => {
+      const sharedRecipe = await ctx.db.recipe.findFirst({
+        where: {
+          createdById: sharedUser,
+          id: share,
+        },
+        include: {
+          images: true,
+          components: {
+            orderBy: { order: "asc" },
+            include: {
+              ingredients: {
+                orderBy: { order: "asc" },
+              },
+              instructions: {
+                orderBy: { order: "asc" },
+              },
+            },
+          }
+        },
+      })
+
+      return sharedRecipe
+    }),
 });

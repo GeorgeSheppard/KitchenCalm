@@ -5,6 +5,7 @@ import { useAppSession } from "../../hooks/use_app_session";
 import { trpc } from "../../../client";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
+import { useRecipes } from "./use_dynamo_get";
 
 const useDeleteRecipeInCache = () => {
   const queryClient = useQueryClient();
@@ -48,11 +49,13 @@ const useDeleteRecipeInCache = () => {
 export const useDeleteRecipeFromDynamo = () => {
   const { loading } = useAppSession();
   const mutate = useDeleteRecipeInCache();
+  const recipes = useRecipes()
 
   return {
     ...trpc.recipes.deleteRecipe.useMutation({
       onMutate: ({ recipeId }) => mutate(recipeId),
       onError: (_, __, context) => context?.undo(),
+      onSuccess: () => recipes.refetch()
     }),
     disabled: loading,
   };

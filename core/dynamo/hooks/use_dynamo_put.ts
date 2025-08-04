@@ -16,10 +16,9 @@ const useMutateRecipeInCache = () => {
   return (recipe: IRecipe) => {
     const previousRecipes: IRecipes | undefined =
       queryClient.getQueryData(recipesKey);
-    console.log('previous recipes', previousRecipes)
 
     if (previousRecipes) {
-      const updatedRecipes = new Map(Object.entries(previousRecipes));
+      const updatedRecipes = new Map(previousRecipes);
       updatedRecipes.set(recipe.uuid, recipe);
       queryClient.setQueryData(recipesKey, updatedRecipes);
     }

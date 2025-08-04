@@ -1,8 +1,8 @@
-import { IInstruction } from "../../../../../../core/types/recipes";
 import Typography from "@mui/material/Typography";
+import { IRecipeInstruction } from "../../../../../../core/types/recipes";
 
 export interface IInstructionsListProps {
-  instructions: IInstruction[];
+  instructions: IRecipeInstruction[];
 }
 
 export const InstructionsList = (props: IInstructionsListProps) => {
@@ -14,14 +14,14 @@ export const InstructionsList = (props: IInstructionsListProps) => {
         </Typography>
       )}
       <div className="ml-4 space-y-1">
-        {props.instructions.map(({ text, optional }, index) => {
+        {props.instructions.map(({ optional, instruction }, index) => {
           let visibleText = `${index + 1}. `;
           if (optional) {
             visibleText += "(Optional) ";
           }
-          visibleText += text;
+          visibleText += instruction;
           return (
-            <Typography key={text} variant="body2" fontSize={12}>
+            <Typography key={instruction} variant="body2" fontSize={12}>
               {visibleText}
             </Typography>
           );

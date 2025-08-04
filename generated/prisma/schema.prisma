@@ -15,18 +15,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  createdBy   User   @relation(fields: [createdById], references: [id])
-  createdById String
-
-  @@index([name])
-}
-
 // Necessary for Next auth
 model Account {
   id                       String  @id @default(cuid())
@@ -63,13 +51,11 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  posts         Post[]
 
   // Recipe relationships
-  recipes       Recipe[]
-  preferences   UserPreference[]
-  sharedRecipes SharedRecipe[]
-  mealPlans     MealPlan[]
+  recipes     Recipe[]
+  preferences UserPreference[]
+  mealPlans   MealPlan[]
 }
 
 model VerificationToken {
@@ -88,15 +74,12 @@ model Recipe {
   description String
   images      RecipeImage[]
   components  RecipeComponent[]
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
 
   // User relationship
   createdBy   User   @relation(fields: [createdById], references: [id])
   createdById String
 
   // Meal planning and sharing relationships
-  sharedRecipes SharedRecipe[]
   mealPlanItems MealPlanItem[]
 
   @@index([name])
@@ -123,7 +106,7 @@ model RecipeComponent {
   name      String
   storeable Boolean @default(false)
   servings  Int?
-  order     Int     @default(0)
+  order     Int
 
   // Recipe relationship
   recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
@@ -137,14 +120,25 @@ model RecipeComponent {
   @@index([order])
 }
 
+enum Unit {
+  NONE
+  MILLILITER
+  LITER
+  GRAM
+  KILOGRAM
+  CUP
+  TEASPOON
+  TABLESPOON
+  NUMBER
+}
+
 model RecipeIngredient {
-  id          String  @id @default(cuid())
-  uuid        String  @unique
-  name        String
-  quantity    Float
-  unit        String
-  order       Int     @default(0)
-  preparation String?
+  id       String @id @default(cuid())
+  uuid     String @unique
+  name     String
+  quantity Float
+  unit     Unit
+  order    Int
 
   // Component relationship
   component   RecipeComponent @relation(fields: [componentId], references: [id], onDelete: Cascade)
@@ -155,10 +149,11 @@ model RecipeIngredient {
 }
 
 model RecipeInstruction {
-  id          String @id @default(cuid())
-  uuid        String @unique
-  instruction String @db.Text
-  order       Int    @default(0)
+  id          String  @id @default(cuid())
+  uuid        String  @unique
+  instruction String  @db.Text
+  order       Int
+  optional    Boolean @default(false)
 
   // Component relationship
   component   RecipeComponent @relation(fields: [componentId], references: [id], onDelete: Cascade)
@@ -170,15 +165,13 @@ model RecipeInstruction {
 
 // User Preferences for AI context
 model UserPreference {
-  id         String   @id @default(cuid())
+  id         String  @id @default(cuid())
   category   String // e.g., "dietary", "cuisine", "chef_style", "equipment"
   preference String // Natural language preference
   context    String? // Additional context
-  confidence Float    @default(1.0)
-  source     String   @default("user") // "user", "inferred", "partner"
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  confidence Float   @default(1.0)
+  source     String  @default("user") // "user", "inferred", "partner"
+  isActive   Boolean @default(true)
 
   // User relationship
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -188,31 +181,10 @@ model UserPreference {
   @@index([category])
 }
 
-// Recipe Sharing (one-time links)
-model SharedRecipe {
-  id        String    @id @default(cuid())
-  shareId   String    @unique @default(cuid())
-  createdAt DateTime  @default(now())
-  expiresAt DateTime?
-
-  // Recipe relationship
-  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  recipeId String
-
-  // User relationship
-  sharedBy   User   @relation(fields: [sharedById], references: [id])
-  sharedById String
-
-  @@index([shareId])
-  @@index([recipeId])
-}
-
 // Meal Planning
 model MealPlan {
-  id        String   @id @default(cuid())
-  name      String   @default("My Meal Plan")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id   String @id @default(cuid())
+  name String @default("My Meal Plan")
 
   // User relationship
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

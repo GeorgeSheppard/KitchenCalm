@@ -13,10 +13,10 @@ export const IngredientsList = (props: IIngredientsListProps) => {
         Ingredients
       </Typography>
       <div className="ml-4 space-y-1">
-      {props.ingredients.map(({ name, quantity }) => {
+      {props.ingredients.map((ingredient) => {
         return (
-          <Typography key={name} variant="body2" fontSize={12}>
-            {"- " + Quantities.toStringWithIngredient(name, quantity)}
+          <Typography key={ingredient.name} variant="body2" fontSize={12}>
+            {"- " + Quantities.toStringWithIngredient(ingredient)}
           </Typography>
         );
       })}

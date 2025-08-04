@@ -1,5 +1,5 @@
 import { UseFormReturn, useFieldArray } from "react-hook-form";
-import { IRecipe } from "../../../../../core/types/recipes";
+import { IRecipe, IRecipeComponent } from "../../../../../core/types/recipes";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -17,7 +17,7 @@ import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
 import { v4 as uuidv4 } from 'uuid';
 
-export const getDefaultComponent = () => ({
+export const getDefaultComponent = (): IRecipeComponent => ({
   uuid: uuidv4(),
   name: "",
   ingredients: [],

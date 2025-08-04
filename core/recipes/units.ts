@@ -1,33 +1,33 @@
-import { IQuantity, Unit, IIngredientName } from "../types/recipes";
+import { $Enums } from "../../generated/prisma";
+import { IRecipeIngredient } from "../types/recipes";
 
 export const Quantities = {
-  toString: (quantity?: IQuantity) => {
-    if (!quantity) {
+  toString: (ingredient?: Pick<IRecipeIngredient, 'unit' | 'quantity'>) => {
+    if (!ingredient) {
       return;
     }
 
-    const unit = quantity.unit;
-    if (!unit || unit === Unit.NO_UNIT) {
+    const unit = ingredient.unit;
+    if (!unit || unit === $Enums.Unit.NONE) {
       return;
     }
 
-    if (unit === Unit.NUMBER) {
-      return `${quantity.value}`;
+    if (unit === $Enums.Unit.NUMBER) {
+      return `${ingredient.quantity}`;
     }
 
-    return `${parseFloat(quantity.value!.toFixed(2))}${unit}`;
+    return `${parseFloat(ingredient.quantity!.toFixed(2))}${unit}`;
   },
   toStringWithIngredient: (
-    ingredientName: IIngredientName,
-    quantity?: IQuantity,
+    ingredient: Pick<IRecipeIngredient, 'unit' | 'quantity' | 'name'>
   ) => {
     {
-      const quantityString = Quantities.toString(quantity);
+      const quantityString = Quantities.toString(ingredient);
 
       if (!quantityString) {
-        return ingredientName;
+        return ingredient.name;
       } else {
-        return quantityString + " " + ingredientName.toLowerCase();
+        return quantityString + " " + ingredient.name.toLowerCase();
       }
     }
   },

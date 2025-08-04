@@ -1,5 +1,5 @@
 import { mealPlanEmptyState } from "../../meal_plan/meal_plan_utilities";
-import { IRecipe, IRecipes, RecipeUuid } from "../../types/recipes";
+import { IRecipes, RecipeUuid } from "../../types/recipes";
 import { NewRecipe } from "../../../pages/food/[recipeUuid]";
 import { useAppSession } from "../../hooks/use_app_session";
 import { trpc } from "../../../client";

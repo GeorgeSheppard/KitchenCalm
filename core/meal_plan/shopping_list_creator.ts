@@ -1,13 +1,14 @@
+import { $Enums } from "../../generated/prisma";
 import { Quantities } from "../recipes/units";
 import { DateString, IDailyMealPlan } from "../types/meal_plan";
-import { IIngredientName, IQuantity, IRecipe, Unit } from "../types/recipes";
+import { IIngredientName, IRecipe, IRecipeIngredient } from "../types/recipes";
 import foodGroups from "./combinedGroups.json";
 import groupDescriptions from "./groupDescriptions.json";
 
 export interface IQuantitiesAndMeals {
   [index: IIngredientName]: {
     meals: Set<string>;
-    quantities: IQuantity[];
+    quantities: Pick<IRecipeIngredient, 'quantity' | 'unit'>[];
   };
 }
 
@@ -44,7 +45,7 @@ export function createShoppingListData(
 
         const { servings = 1 } = recipeComponent;
         recipeComponent.ingredients.forEach((recipeIngredient) => {
-          const { name, quantity } = recipeIngredient;
+          const { name, quantity, unit } = recipeIngredient;
 
           if (!(name in quantityAndMeals)) {
             quantityAndMeals[name] = {
@@ -53,27 +54,24 @@ export function createShoppingListData(
             };
           }
 
-          const ratio = component.servings / servings;
+          const ratio = component.servings / (servings ?? 1);
 
           quantityAndMeals[name].meals.add(recipe.name);
           const currentQuantities = quantityAndMeals[name].quantities;
 
           const quantityIndex = currentQuantities.findIndex(
-            (quant) => quant.unit === quantity.unit
+            (quant) => quant.unit === unit
           );
-          const value = (quantity.value ?? 0) * ratio;
+          const value = (quantity ?? 0) * ratio;
           if (quantityIndex > -1) {
-            if (quantity.unit !== Unit.NO_UNIT) {
+            if (unit !== $Enums.Unit.NONE) {
               currentQuantities[quantityIndex] = {
-                unit: quantity.unit,
-                value: (currentQuantities[quantityIndex].value ?? 0) + value,
-              };
+                unit,
+                quantity: (currentQuantities[quantityIndex].quantity ?? 0) + value,
+              }
             }
           } else {
-            currentQuantities.push({
-              unit: quantity.unit,
-              value,
-            });
+            currentQuantities.push({ unit, quantity: value });
           }
         });
       }

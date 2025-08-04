@@ -2,12 +2,12 @@ import LinearProgress from "@mui/material/LinearProgress";
 import { useRouter } from "next/router";
 import { v4 as uuidv4 } from "uuid";
 import { useRecipe } from "../../core/dynamo/hooks/use_dynamo_get";
-import { RecipeUuid } from "../../core/types/recipes";
+import { IRecipe, RecipeUuid } from "../../core/types/recipes";
 import { FormWithData } from "../../components/pages/food/[recipeUuid]/form_with_data";
 
 export const NewRecipe = "newRecipe";
 
-const getDefaultRecipe = (uuid: string) => ({
+const getDefaultRecipe = (uuid: string): IRecipe => ({
   uuid,
   name: "",
   description: "",

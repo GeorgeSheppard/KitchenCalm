@@ -1,5 +1,6 @@
 import { createShoppingListData } from "../../core/meal_plan/shopping_list_creator";
-import { IRecipe, Unit } from "../../core/types/recipes";
+import { IRecipe } from "../../core/types/recipes";
+import { $Enums } from "../../generated/prisma";
 
 const recipes: IRecipe[] = [
   {
@@ -15,12 +16,11 @@ const recipes: IRecipe[] = [
         ingredients: [
           {
             name: "Chicken",
-            quantity: {
-              unit: Unit.GRAM,
-              value: 200,
-            },
+            unit: $Enums.Unit.GRAM,
+            quantity: 200,
           },
         ],
+        servings: 1
       },
     ],
   },
@@ -37,12 +37,11 @@ const recipes: IRecipe[] = [
         ingredients: [
           {
             name: "Chicken",
-            quantity: {
-              unit: Unit.KILOGRAM,
-              value: 1,
-            },
+            unit: $Enums.Unit.KILOGRAM,
+            quantity: 1,
           },
         ],
+        servings: 1
       },
     ],
   },
@@ -59,19 +58,16 @@ const recipes: IRecipe[] = [
         ingredients: [
           {
             name: "Chicken",
-            quantity: {
-              unit: Unit.GRAM,
-              value: 300,
-            },
+            unit: $Enums.Unit.GRAM,
+            quantity: 300,
           },
           {
             name: "Other",
-            quantity: {
-              unit: Unit.GRAM,
-              value: 100,
-            },
+            unit: $Enums.Unit.GRAM,
+            quantity: 100,
           },
         ],
+        servings: 1
       },
     ],
   },
@@ -92,13 +88,13 @@ test("", () => {
     Chicken: {
       meals: new Set(["Recipe 1", "Recipe 2", "Recipe 3"]),
       quantities: [
-        { unit: Unit.GRAM, value: 500 },
-        { unit: Unit.KILOGRAM, value: 1 },
+        { unit: $Enums.Unit.GRAM, value: 500 },
+        { unit: $Enums.Unit.KILOGRAM, value: 1 },
       ],
     },
     Other: {
       meals: new Set(["Recipe 3"]),
-      quantities: [{ unit: Unit.GRAM, value: 100 }],
+      quantities: [{ unit: $Enums.Unit.GRAM, value: 100 }],
     },
   });
 });

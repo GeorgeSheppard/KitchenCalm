@@ -1,29 +1,29 @@
 import { z } from "zod";
 import {
-  IInstruction,
-  IQuantity,
   IRecipe,
   IRecipeComponent,
+  IRecipeImage,
   IRecipeIngredient,
-  Unit,
+  IRecipeInstruction,
 } from "../../../../core/types/recipes";
-import { Image } from "../../../../core/types/general";
+import { $Enums } from "../../../../generated/prisma";
 
-const imageValidator: z.ZodType<Image> = z.object({
-  timestamp: z.number(),
+const imageValidator: z.ZodType<IRecipeImage> = z.object({
+  id: z.string(),
+  recipeId: z.string(),
+  imageData: z.string(),
+  mimeType: z.string(),
+  timestamp: z.bigint(),
   key: z.string(),
-});
-const quantityValidator: z.ZodType<IQuantity> = z.object({
-  unit: z.nativeEnum(Unit),
-  value: z.number().optional(),
 });
 const ingredientValidator: z.ZodType<IRecipeIngredient> = z.object({
   name: z.string(),
-  quantity: quantityValidator,
+  unit: z.nativeEnum($Enums.Unit),
+  quantity: z.number(),
 });
-const instructionValidator: z.ZodType<IInstruction> = z.object({
-  text: z.string(),
-  optional: z.boolean().optional(),
+const instructionValidator: z.ZodType<IRecipeInstruction> = z.object({
+  instruction: z.string(),
+  optional: z.boolean()
 });
 
 const componentValidator: z.ZodType<IRecipeComponent> = z.object({
@@ -31,8 +31,8 @@ const componentValidator: z.ZodType<IRecipeComponent> = z.object({
   uuid: z.string(),
   ingredients: ingredientValidator.array(),
   instructions: instructionValidator.array(),
-  storeable: z.boolean().optional(),
-  servings: z.number().optional()
+  storeable: z.boolean(),
+  servings: z.number()
 });
 
 export const recipeValidator: z.ZodType<IRecipe> = z.object({

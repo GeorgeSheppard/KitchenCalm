@@ -1,5 +1,5 @@
 import { UseFormReturn, useFieldArray } from "react-hook-form";
-import { IRecipe, Unit } from "../../../../../core/types/recipes";
+import { IRecipe } from "../../../../../core/types/recipes";
 import TableContainer from "@mui/material/TableContainer";
 import Table from "@mui/material/Table";
 import TableHead from "@mui/material/TableHead";
@@ -14,10 +14,12 @@ import CloseIcon from "@mui/icons-material/Close";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
+import { $Enums } from "../../../../../generated/prisma";
 
 export const getDefaultIngredient = () => ({
   name: "",
-  quantity: { unit: Unit.GRAM, value: 1 },
+  unit: $Enums.Unit.GRAM,
+  quantity: 1
 });
 
 export const IngredientsList = ({

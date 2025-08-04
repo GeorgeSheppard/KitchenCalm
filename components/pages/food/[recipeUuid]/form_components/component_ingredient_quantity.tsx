@@ -1,6 +1,7 @@
 import { UseFormReturn } from "react-hook-form";
-import { IRecipe, Unit } from "../../../../../core/types/recipes";
+import { IRecipe } from "../../../../../core/types/recipes";
 import TextField from "@mui/material/TextField";
+import { $Enums } from "../../../../../generated/prisma";
 
 export const ComponentIngredientQuantity = ({
   form,
@@ -23,25 +24,23 @@ export const ComponentIngredientQuantity = ({
       type="number"
       inputProps={{ step: 0.01 }}
       {...register(
-        `components.${index}.ingredients.${ingredientIndex}.quantity.value`,
+        `components.${index}.ingredients.${ingredientIndex}.quantity`,
         {
           min: 0,
           valueAsNumber: true,
           validate: (value, formValues) =>
-            formValues.components[index].ingredients[ingredientIndex].quantity
-              .unit === Unit.NO_UNIT
+            formValues.components[index].ingredients[ingredientIndex].unit === $Enums.Unit.NONE
               ? !value || isNaN(value)
               : !!value,
         }
       )}
       error={
         !!errors?.components?.[index]?.ingredients?.[ingredientIndex]?.quantity
-          ?.value
       }
       disabled={
         watch(
-          `components.${index}.ingredients.${ingredientIndex}.quantity.unit`
-        ) === Unit.NO_UNIT
+          `components.${index}.ingredients.${ingredientIndex}.unit`
+        ) === $Enums.Unit.NONE
       }
     />
   );

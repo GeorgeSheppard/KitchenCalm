@@ -1,9 +1,10 @@
 import { UseFormReturn } from "react-hook-form";
-import { IRecipe, Unit } from "../../../../../core/types/recipes";
+import { IRecipe } from "../../../../../core/types/recipes";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { getDefaultIngredient } from "./component_ingredients";
+import { $Enums } from "../../../../../generated/prisma";
 
 export const ComponentIngredientUnit = ({
   form,
@@ -27,33 +28,33 @@ export const ComponentIngredientUnit = ({
         label="Unit"
         value={
           watch(
-            `components.${index}.ingredients.${ingredientIndex}.quantity.unit`
-          ) ?? getDefaultIngredient().quantity.unit
+            `components.${index}.ingredients.${ingredientIndex}.unit`
+          ) ?? getDefaultIngredient().unit
         }
         {...register(
-          `components.${index}.ingredients.${ingredientIndex}.quantity.unit`,
+          `components.${index}.ingredients.${ingredientIndex}.unit`,
           {
             required: "A unit is required",
           }
         )}
         onChange={(e) => {
-          if (e.target.value === Unit.NO_UNIT) {
+          if (e.target.value === $Enums.Unit.NONE) {
             setValue(
-              `components.${index}.ingredients.${ingredientIndex}.quantity.value`,
-              undefined
+              `components.${index}.ingredients.${ingredientIndex}.quantity`,
+              1
             );
           }
           setValue(
-            `components.${index}.ingredients.${ingredientIndex}.quantity.unit`,
-            e.target.value as Unit
+            `components.${index}.ingredients.${ingredientIndex}.unit`,
+            e.target.value as $Enums.Unit
           );
         }}
         error={
           !!errors?.components?.[index]?.ingredients?.[ingredientIndex]
-            ?.quantity?.unit
+            ?.unit
         }
       >
-        {Object.entries(Unit).map((value) => {
+        {Object.entries($Enums.Unit).map((value) => {
           return (
             <MenuItem key={value[0]} value={value[1]}>
               {value[1]}

@@ -9,7 +9,8 @@ import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
 
 export const getDefaultInstruction = () => ({
-  text: "",
+  instruction: "",
+  optional: false
 });
 
 export const InstructionsList = ({
@@ -40,7 +41,7 @@ export const InstructionsList = ({
               margin="none"
               multiline
               {...register(
-                `components.${index}.instructions.${instructionIndex}.text`
+                `components.${index}.instructions.${instructionIndex}.instruction`
               )}
             />
             <IconButton

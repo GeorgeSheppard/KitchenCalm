@@ -120,14 +120,6 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.PostScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  createdById: 'createdById'
-};
-
 exports.Prisma.AccountScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -170,8 +162,6 @@ exports.Prisma.RecipeScalarFieldEnum = {
   uuid: 'uuid',
   name: 'name',
   description: 'description',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
   createdById: 'createdById'
 };
 
@@ -201,7 +191,6 @@ exports.Prisma.RecipeIngredientScalarFieldEnum = {
   quantity: 'quantity',
   unit: 'unit',
   order: 'order',
-  preparation: 'preparation',
   componentId: 'componentId'
 };
 
@@ -210,6 +199,7 @@ exports.Prisma.RecipeInstructionScalarFieldEnum = {
   uuid: 'uuid',
   instruction: 'instruction',
   order: 'order',
+  optional: 'optional',
   componentId: 'componentId'
 };
 
@@ -221,25 +211,12 @@ exports.Prisma.UserPreferenceScalarFieldEnum = {
   confidence: 'confidence',
   source: 'source',
   isActive: 'isActive',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
   userId: 'userId'
-};
-
-exports.Prisma.SharedRecipeScalarFieldEnum = {
-  id: 'id',
-  shareId: 'shareId',
-  createdAt: 'createdAt',
-  expiresAt: 'expiresAt',
-  recipeId: 'recipeId',
-  sharedById: 'sharedById'
 };
 
 exports.Prisma.MealPlanScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
   userId: 'userId'
 };
 
@@ -267,10 +244,19 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
-
+exports.Unit = exports.$Enums.Unit = {
+  NONE: 'NONE',
+  MILLILITER: 'MILLILITER',
+  LITER: 'LITER',
+  GRAM: 'GRAM',
+  KILOGRAM: 'KILOGRAM',
+  CUP: 'CUP',
+  TEASPOON: 'TEASPOON',
+  TABLESPOON: 'TABLESPOON',
+  NUMBER: 'NUMBER'
+};
 
 exports.Prisma.ModelName = {
-  Post: 'Post',
   Account: 'Account',
   Session: 'Session',
   User: 'User',
@@ -281,7 +267,6 @@ exports.Prisma.ModelName = {
   RecipeIngredient: 'RecipeIngredient',
   RecipeInstruction: 'RecipeInstruction',
   UserPreference: 'UserPreference',
-  SharedRecipe: 'SharedRecipe',
   MealPlan: 'MealPlan',
   MealPlanItem: 'MealPlanItem'
 };

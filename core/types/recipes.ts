@@ -1,55 +1,38 @@
-import { Image } from "./general";
-
-export enum Unit {
-  NO_UNIT = "none",
-  MILLILITER = "mL",
-  LITER = "L",
-  GRAM = "g",
-  KILOGRAM = "kg",
-  CUP = "cup",
-  TEASPOON = "tsp",
-  TABLESPOON = "tbsp",
-  NUMBER = "quantity",
-}
+import { $Enums, RecipeImage } from "../../generated/prisma";
 
 export type RecipeUuid = string;
 export type ComponentUuid = string;
 export type IngredientUuid = string;
 export type IIngredientName = string;
 
-export interface IInstruction {
-  text: string;
-  /**
-   * Assumed false
-   */
-  optional?: boolean;
-}
-
-export interface IQuantity {
-  unit: Unit;
-  value?: number;
+export interface IRecipeInstruction {
+  instruction: string;
+  optional: boolean;
 }
 
 export interface IRecipeIngredient {
   name: IIngredientName;
-  quantity: IQuantity;
+  unit: $Enums.Unit;
+  quantity: number;
 }
 
 export interface IRecipeComponent {
   name: string;
   uuid: ComponentUuid;
   ingredients: IRecipeIngredient[];
-  instructions: IInstruction[];
+  instructions: IRecipeInstruction[];
   storeable?: boolean;
-  servings?: number;
+  servings: number | null;
 }
 
 export interface IRecipe {
   uuid: RecipeUuid;
   name: string;
   description: string;
-  images: Image[];
+  images: RecipeImage[];
   components: IRecipeComponent[];
 }
 
 export type IRecipes = Map<RecipeUuid, IRecipe>
+
+export type IRecipeImage = RecipeImage

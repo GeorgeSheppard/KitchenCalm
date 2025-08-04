@@ -16,7 +16,7 @@ export const CopyIngredientsButton = (props: ICopyIngredientsButtonProps) => {
     );
     const text = ingredients
       .map((ingredient) =>
-        Quantities.toStringWithIngredient(ingredient.name, ingredient.quantity)
+        Quantities.toStringWithIngredient(ingredient)
       )
       .join("\n");
     navigator.clipboard.writeText(text);

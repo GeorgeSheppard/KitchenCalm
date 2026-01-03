@@ -10,6 +10,7 @@ class MyDocument extends Document {
             href="https://fonts.googleapis.com/css?family=Roboto&display=swap"
             rel="stylesheet"
           />
+          <link rel="shortcut icon" href="/favicon.ico" />
         </Head>
         <body>
           <CssBaseline />

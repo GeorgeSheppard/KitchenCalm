@@ -38,8 +38,5 @@ yarn-error.log*
 *.tsbuildinfo
 
 .vercel
-# Sentry
-.sentryclirc
 
-# Sentry
 next.config.original.js

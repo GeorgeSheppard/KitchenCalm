@@ -2,18 +2,14 @@ import { IRecipes, RecipeUuid } from "../../types/recipes";
 import clone from "just-clone";
 import { IMealPlan } from "../../types/meal_plan";
 import { useAppSession } from "../../hooks/use_app_session";
-import { trpc } from "../../../client";
 import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
+import { useDeleteRecipe } from "../../../client/hooks/use-recipes";
+import { queryKeys } from "../../../client/query-keys";
 
 const useDeleteRecipeInCache = () => {
   const queryClient = useQueryClient();
-  const recipesKey = getQueryKey(trpc.recipes.getRecipes, undefined, "query");
-  const mealPlanKey = getQueryKey(
-    trpc.mealPlan.getMealPlan,
-    undefined,
-    "query"
-  );
+  const recipesKey = queryKeys.recipes.list();
+  const mealPlanKey = queryKeys.mealPlan.current();
 
   return (recipeId: RecipeUuid) => {
     const previousRecipes: IRecipes | undefined =
@@ -48,12 +44,13 @@ const useDeleteRecipeInCache = () => {
 export const useDeleteRecipeFromDynamo = () => {
   const { loading } = useAppSession();
   const mutate = useDeleteRecipeInCache();
+  const deleteRecipe = useDeleteRecipe({
+    onMutate: (recipeId) => mutate(recipeId),
+    onError: (_, __, context) => context?.undo(),
+  });
 
   return {
-    ...trpc.recipes.deleteRecipe.useMutation({
-      onMutate: ({ recipeId }) => mutate(recipeId),
-      onError: (_, __, context) => context?.undo(),
-    }),
+    ...deleteRecipe,
     disabled: loading,
   };
 };

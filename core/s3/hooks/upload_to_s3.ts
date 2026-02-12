@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { S3Key } from "../../types/general";
 import { useAppSession } from "../../hooks/use_app_session";
-import { trpc } from "../../../client";
+import { useGetUploadUrl } from "../../../client/hooks/use-s3";
 
 export interface IS3ValidUploadResponse {
   key: S3Key;
@@ -31,7 +31,7 @@ export interface IUseUploadToS3Props {
  */
 export default function useUploadToS3(props: IUseUploadToS3Props) {
   const { loading } = useAppSession();
-  const putToS3 = trpc.s3.put.useMutation();
+  const getUploadUrl = useGetUploadUrl();
 
   const uploadFile = useCallback(
     async (file: File) => {
@@ -57,13 +57,13 @@ export default function useUploadToS3(props: IUseUploadToS3Props) {
       }
 
       try {
-        const { signedUrl, path } = await putToS3.mutateAsync({
-          filename,
-          folder: props.folder,
+        const { signedUrl, key } = await getUploadUrl.mutateAsync({
+          fileName: filename,
+          contentType: file.type,
         });
         const upload = await fetch(signedUrl, { method: "PUT", body: file });
         if (upload.ok) {
-          onUploadFinished?.({ key: path });
+          onUploadFinished?.({ key });
         } else {
           onUploadError?.({ error: "unknown" });
         }
@@ -77,7 +77,7 @@ export default function useUploadToS3(props: IUseUploadToS3Props) {
       props.onUploadFinished,
       props.folder,
       props.makeKeyUnique,
-      putToS3,
+      getUploadUrl,
       loading,
     ]
   );

@@ -14,8 +14,17 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async session({ session, user, token }) {
+    async jwt({ token, account }) {
+      // Store the access token in the JWT
+      if (account) {
+        token.accessToken = account.access_token;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      // Add user ID and access token to session
       (session as any).id = token.sub;
+      (session as any).accessToken = token.accessToken;
       return session;
     },
   },

@@ -14,13 +14,18 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { StyledEngineProvider } from "@mui/material/styles";
-import { trpc } from "../client";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 15 * 60 * 1000,
+      gcTime: 1 * 60 * 60 * 1000, // 1 hour
+      retry: 1,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
       structuralSharing: false,
+    },
+    mutations: {
+      retry: 1,
     },
   },
 });
@@ -52,4 +57,4 @@ function KitchenCalm(props: IKitchenCalmProps) {
   );
 }
 
-export default trpc.withTRPC(KitchenCalm)
+export default KitchenCalm

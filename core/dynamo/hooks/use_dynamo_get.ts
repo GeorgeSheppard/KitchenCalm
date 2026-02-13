@@ -2,8 +2,7 @@ import { mealPlanEmptyState } from "../../meal_plan/meal_plan_utilities";
 import { IRecipe, IRecipes, RecipeUuid } from "../../types/recipes";
 import { NewRecipe } from "../../../pages/food/[recipeUuid]";
 import { useAppSession } from "../../hooks/use_app_session";
-import { useGetRecipes } from "../../../client/hooks/use-recipes";
-import { useGetMealPlan } from "../../../client/hooks/use-meal-plan";
+import { useGetKitchencalmRecipes, useGetKitchencalmMealPlan } from "../../../client/generated/hooks";
 import { UseQueryResult } from "@tanstack/react-query";
 
 const useRecipesBase = <T>({
@@ -14,12 +13,12 @@ const useRecipesBase = <T>({
   select?: (data: IRecipes) => T;
 }): UseQueryResult<T> => {
   const { loading } = useAppSession();
-  const recipesQuery = useGetRecipes({
+  const recipesQuery = useGetKitchencalmRecipes({
     enabled: !loading && (enabled ?? true),
   });
 
   // Convert API response (object) to Map format for compatibility
-  const recipesMap: IRecipes = recipesQuery.data ? new Map(Object.entries(recipesQuery.data)) : new Map();
+  const recipesMap: IRecipes = recipesQuery.data ? new Map(Object.entries(recipesQuery.data as any)) : new Map();
 
   return {
     ...recipesQuery,
@@ -51,7 +50,7 @@ export const useRecipe = (recipeId?: RecipeUuid, enabled?: boolean) => {
 
 export const useMealPlan = () => {
   const { loading } = useAppSession();
-  const mealPlan = useGetMealPlan({
+  const mealPlan = useGetKitchencalmMealPlan({
     enabled: !loading,
     placeholderData: mealPlanEmptyState,
   });

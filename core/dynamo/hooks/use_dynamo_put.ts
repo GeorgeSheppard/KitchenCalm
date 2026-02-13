@@ -5,14 +5,17 @@ import {
 } from "../../meal_plan/meal_plan_utilities";
 import { IMealPlan } from "../../types/meal_plan";
 import { useAppSession } from "../../hooks/use_app_session";
-import { useUpdateRecipe } from "../../../client/hooks/use-recipes";
-import { useUpdateMealPlan } from "../../../client/hooks/use-meal-plan";
-import { queryKeys } from "../../../client/query-keys";
+import {
+  usePutKitchencalmRecipes,
+  usePutKitchencalmMealPlan,
+  getGetKitchencalmRecipesQueryKey,
+  getGetKitchencalmMealPlanQueryKey,
+} from "../../../client/generated/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 
 const useMutateRecipeInCache = () => {
   const queryClient = useQueryClient();
-  const recipesKey = queryKeys.recipes.list();
+  const recipesKey = getGetKitchencalmRecipesQueryKey();
 
   return (recipe: IRecipe) => {
     const previousRecipes: IRecipes | undefined =
@@ -32,7 +35,7 @@ const useMutateRecipeInCache = () => {
 
 const useMutateMealPlanInCache = () => {
   const queryClient = useQueryClient();
-  const mealPlanKey = queryKeys.mealPlan.current();
+  const mealPlanKey = getGetKitchencalmMealPlanQueryKey();
 
   return (newMealPlan: IMealPlan) => {
     const previousMealPlan: IMealPlan | undefined =
@@ -51,8 +54,8 @@ const useMutateMealPlanInCache = () => {
 export const usePutRecipeToDynamo = () => {
   const { loading } = useAppSession();
   const mutate = useMutateRecipeInCache();
-  const updateRecipe = useUpdateRecipe({
-    onMutate: (recipe) => mutate(recipe),
+  const updateRecipe = usePutKitchencalmRecipes({
+    onMutate: (data) => mutate(data.recipe),
     onError: (_, __, context) => context?.undo(),
   });
 
@@ -65,9 +68,9 @@ export const usePutRecipeToDynamo = () => {
 export const usePutMealPlanToDynamo = () => {
   const mutate = useMutateMealPlanInCache();
   const queryClient = useQueryClient();
-  const mealPlanKey = queryKeys.mealPlan.current();
+  const mealPlanKey = getGetKitchencalmMealPlanQueryKey();
 
-  const updateMealPlan = useUpdateMealPlan({
+  const updateMealPlan = usePutKitchencalmMealPlan({
     onMutate: (newMealPlan) => mutate(newMealPlan),
     onError: (_, __, context) => context?.undo(),
   });

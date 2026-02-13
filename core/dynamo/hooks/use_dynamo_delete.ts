@@ -3,13 +3,12 @@ import clone from "just-clone";
 import { IMealPlan } from "../../types/meal_plan";
 import { useAppSession } from "../../hooks/use_app_session";
 import { useQueryClient } from "@tanstack/react-query";
-import { useDeleteRecipe } from "../../../client/hooks/use-recipes";
-import { queryKeys } from "../../../client/query-keys";
+import { useDeleteKitchencalmRecipesUuid, getGetKitchencalmRecipesQueryKey, getGetKitchencalmMealPlanQueryKey } from "../../../client/generated/hooks";
 
 const useDeleteRecipeInCache = () => {
   const queryClient = useQueryClient();
-  const recipesKey = queryKeys.recipes.list();
-  const mealPlanKey = queryKeys.mealPlan.current();
+  const recipesKey = getGetKitchencalmRecipesQueryKey();
+  const mealPlanKey = getGetKitchencalmMealPlanQueryKey();
 
   return (recipeId: RecipeUuid) => {
     const previousRecipes: IRecipes | undefined =
@@ -44,8 +43,8 @@ const useDeleteRecipeInCache = () => {
 export const useDeleteRecipeFromDynamo = () => {
   const { loading } = useAppSession();
   const mutate = useDeleteRecipeInCache();
-  const deleteRecipe = useDeleteRecipe({
-    onMutate: (recipeId) => mutate(recipeId),
+  const deleteRecipe = useDeleteKitchencalmRecipesUuid(undefined, {
+    onMutate: ({ uuid }) => mutate(uuid as any),
     onError: (_, __, context) => context?.undo(),
   });
 

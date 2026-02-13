@@ -1,0 +1,923 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API",
+    "description": "Backend API for georgesheppard.dev websites",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.georgesheppard.dev",
+      "description": "Production"
+    }
+  ],
+  "components": {
+    "schemas": {},
+    "parameters": {}
+  },
+  "paths": {
+    "/api/recommendations/{id}": {
+      "get": {
+        "tags": [
+          "recommendations"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recommendation retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recommendations": {
+                      "type": "array",
+                      "nullable": true,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          },
+                          "amazonLink": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "author",
+                          "description",
+                          "reason",
+                          "amazonLink"
+                        ]
+                      }
+                    },
+                    "hasEmail": {
+                      "type": "boolean"
+                    },
+                    "isRecurringMonthly": {
+                      "type": "boolean"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "recommendations",
+                    "hasEmail",
+                    "isRecurringMonthly",
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recommendations/add-email": {
+      "post": {
+        "tags": [
+          "recommendations"
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "recurring": {
+                    "type": "string",
+                    "enum": [
+                      "true",
+                      "false"
+                    ]
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email added successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recommendations/delete-email": {
+      "post": {
+        "tags": [
+          "recommendations"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requestId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "requestId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email removed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recommendations/from-bookcase": {
+      "post": {
+        "tags": [
+          "recommendations"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bookcase": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "One or more bookcase images"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recommendation request created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mcp/auth/token": {
+      "post": {
+        "tags": [
+          "mcp"
+        ],
+        "description": "Generate a JWT token for authenticated users",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "User ID as UUID"
+                  }
+                },
+                "required": [
+                  "userId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT token generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "description": "JWT token"
+                    },
+                    "userId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "User ID"
+                    }
+                  },
+                  "required": [
+                    "token",
+                    "userId"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kitchencalm/recipes": {
+      "get": {
+        "tags": [
+          "kitchencalm",
+          "recipes"
+        ],
+        "description": "Get all recipes for the authenticated user",
+        "responses": {
+          "200": {
+            "description": "Recipes retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "uuid": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "images": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "timestamp": {
+                              "type": "number"
+                            },
+                            "key": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "timestamp",
+                            "key"
+                          ]
+                        }
+                      },
+                      "components": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "uuid": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "ingredients": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "quantity": {
+                                    "type": "object",
+                                    "properties": {
+                                      "unit": {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "mL",
+                                          "L",
+                                          "g",
+                                          "kg",
+                                          "cup",
+                                          "tsp",
+                                          "tbsp",
+                                          "quantity"
+                                        ]
+                                      },
+                                      "value": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "required": [
+                                      "unit"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "name",
+                                  "quantity"
+                                ]
+                              }
+                            },
+                            "instructions": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "text": {
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "text"
+                                ]
+                              }
+                            },
+                            "storeable": {
+                              "type": "boolean"
+                            },
+                            "servings": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "uuid",
+                            "ingredients",
+                            "instructions"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "uuid",
+                      "name",
+                      "description",
+                      "images",
+                      "components"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "kitchencalm",
+          "recipes"
+        ],
+        "description": "Create or update a recipe",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "uuid": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "timestamp": {
+                          "type": "number"
+                        },
+                        "key": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "timestamp",
+                        "key"
+                      ]
+                    }
+                  },
+                  "components": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "description",
+                  "images",
+                  "components"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recipe updated/created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "uuid": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "uuid",
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kitchencalm/recipes/{uuid}": {
+      "delete": {
+        "tags": [
+          "kitchencalm",
+          "recipes"
+        ],
+        "description": "Delete a recipe",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recipe deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "uuid": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "uuid"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kitchencalm/recipes/share": {
+      "post": {
+        "tags": [
+          "kitchencalm",
+          "recipes"
+        ],
+        "description": "Create a shareable link for a recipe",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "recipe": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "recipe"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recipe shared successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "shareId": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "shareId"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kitchencalm/recipes/shared/{shareId}": {
+      "get": {
+        "tags": [
+          "kitchencalm",
+          "recipes"
+        ],
+        "description": "Get a publicly shared recipe by share ID",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "shareId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shared recipe retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kitchencalm/meal-plan": {
+      "get": {
+        "tags": [
+          "kitchencalm",
+          "meal-plan"
+        ],
+        "description": "Get the meal plan for the authenticated user",
+        "responses": {
+          "200": {
+            "description": "Meal plan retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "componentId": {
+                            "type": "string"
+                          },
+                          "servings": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "componentId",
+                          "servings"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "kitchencalm",
+          "meal-plan"
+        ],
+        "description": "Update the meal plan for the authenticated user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Meal plan updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kitchencalm/shopping-list": {
+      "get": {
+        "tags": [
+          "kitchencalm",
+          "shopping-list"
+        ],
+        "description": "Get shopping list",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "startDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "endDate",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shopping list retrieved successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kitchencalm/s3/signed-url": {
+      "post": {
+        "tags": [
+          "kitchencalm",
+          "s3"
+        ],
+        "description": "Generate a signed GET URL for downloading files from S3",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "key"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed GET URL generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "signedUrl": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "required": [
+                    "signedUrl"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kitchencalm/s3/upload": {
+      "post": {
+        "tags": [
+          "kitchencalm",
+          "s3"
+        ],
+        "description": "Generate a signed PUT URL for uploading files to S3",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fileName": {
+                    "type": "string"
+                  },
+                  "contentType": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "fileName",
+                  "contentType"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed PUT URL generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "signedUrl": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "key": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "signedUrl",
+                    "key"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kitchencalm/s3/delete": {
+      "post": {
+        "tags": [
+          "kitchencalm",
+          "s3"
+        ],
+        "description": "Delete a file from S3",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "key"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

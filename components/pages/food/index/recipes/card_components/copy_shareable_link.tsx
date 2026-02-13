@@ -4,7 +4,7 @@ import { useAppSession } from "../../../../../../core/hooks/use_app_session";
 import ShareIcon from "@mui/icons-material/Share";
 import { useTemporaryState } from "../../../../../../core/hooks/use_temporary_state";
 import Tooltip from "@mui/material/Tooltip";
-import { useShareRecipe } from "../../../../../../client/hooks/use-recipes";
+import { usePostKitchencalmRecipesShare } from "../../../../../../client/generated/hooks";
 
 export interface ICopyIngredientsButtonProps {
   recipe: IRecipe;
@@ -12,11 +12,11 @@ export interface ICopyIngredientsButtonProps {
 
 export const CopyShareableLink = ({ recipe }: ICopyIngredientsButtonProps) => {
   const session = useAppSession();
-  const shareRecipeMutation = useShareRecipe()
+  const shareRecipeMutation = usePostKitchencalmRecipesShare()
 
   const copyLink = async () => {
-    // Convert IRecipe to Recipe type format if needed
-    const result = await shareRecipeMutation.mutateAsync(recipe as any)
+    // Pass recipe in the expected format for the generated hook
+    const result = await shareRecipeMutation.mutateAsync({ recipe: recipe as any })
     const baseUrl = process.env.NEXT_PUBLIC_ENV_DOMAIN || process.env.ENV_DOMAIN;
     const url = new URL(`${baseUrl}/food`);
     url.searchParams.append("share", result.shareId)

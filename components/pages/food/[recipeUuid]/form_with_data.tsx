@@ -11,12 +11,12 @@ import Container from "@mui/material/Container";
 import Alert from "@mui/material/Alert";
 import { ComponentAccordions } from "./form_components/component_accordion";
 import { ExitSaveButtons } from "../../../core/exit_save_buttons";
-import { useDeleteS3Object } from "../../../../client/hooks/use-s3";
+import { usePostKitchencalmS3Delete } from "../../../../client/generated/hooks";
 
 export const FormWithData = ({ recipe }: { recipe: IRecipe }) => {
   const router = useRouter();
   const { mutateAsync, disabled } = usePutRecipeToDynamo();
-  const deleteFromS3 = useDeleteS3Object()
+  const deleteFromS3 = usePostKitchencalmS3Delete()
   const form = useForm<IRecipe>({
     defaultValues: recipe,
   });

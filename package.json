@@ -12,7 +12,8 @@
     "ts": "tsc --noEmit --incremental",
     "ts:watch": "yarn ts --watch",
     "test": "jest --watchAll=false",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "generate:api": "orval --config orval.config.ts"
   },
   "husky": {
     "hooks": {
@@ -35,6 +36,7 @@
     "@trpc/next": "^10.38.5",
     "@trpc/react-query": "^10.38.5",
     "@trpc/server": "^10.38.5",
+    "axios": "^1.6.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "fuse.js": "^6.5.3",
     "husky": "^7.0.4",
@@ -55,6 +57,7 @@
   },
   "devDependencies": {
     "@mui/types": "^7.1.0",
+    "@orval/core": "^6.17.0",
     "@types/jest": "^28.1.2",
     "@types/node": "16.11.12",
     "@types/react": "17.0.37",

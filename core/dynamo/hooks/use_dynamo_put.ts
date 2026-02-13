@@ -5,13 +5,17 @@ import {
 } from "../../meal_plan/meal_plan_utilities";
 import { IMealPlan } from "../../types/meal_plan";
 import { useAppSession } from "../../hooks/use_app_session";
-import { trpc } from "../../../client";
+import {
+  useUpdateRecipe,
+  useUpdateMealPlan,
+  getRecipesQueryKey,
+  getMealPlanQueryKey,
+} from "../../../client/hooks";
 import { useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 
 const useMutateRecipeInCache = () => {
   const queryClient = useQueryClient();
-  const recipesKey = getQueryKey(trpc.recipes.getRecipes, undefined, "query")
+  const recipesKey = getRecipesQueryKey();
 
   return (recipe: IRecipe) => {
     const previousRecipes: IRecipes | undefined =
@@ -31,7 +35,7 @@ const useMutateRecipeInCache = () => {
 
 const useMutateMealPlanInCache = () => {
   const queryClient = useQueryClient();
-  const mealPlanKey = getQueryKey(trpc.mealPlan.getMealPlan, undefined, "query")
+  const mealPlanKey = getMealPlanQueryKey();
 
   return (newMealPlan: IMealPlan) => {
     const previousMealPlan: IMealPlan | undefined =
@@ -50,12 +54,19 @@ const useMutateMealPlanInCache = () => {
 export const usePutRecipeToDynamo = () => {
   const { loading } = useAppSession();
   const mutate = useMutateRecipeInCache();
+  const updateRecipe = useUpdateRecipe();
 
   return {
-    ...trpc.recipes.updateRecipe.useMutation({
-      onMutate: ({ recipe }) => mutate(recipe),
-      onError: (_, __, context) => context?.undo(),
-    }),
+    ...updateRecipe,
+    mutateAsync: async (recipe: IRecipe) => {
+      const context = mutate(recipe);
+      try {
+        return await updateRecipe.mutateAsync(recipe);
+      } catch (error) {
+        context.undo();
+        throw error;
+      }
+    },
     disabled: loading,
   };
 };
@@ -63,21 +74,16 @@ export const usePutRecipeToDynamo = () => {
 export const usePutMealPlanToDynamo = () => {
   const mutate = useMutateMealPlanInCache();
   const queryClient = useQueryClient();
-  const mealPlanKey = getQueryKey(trpc.mealPlan.getMealPlan, undefined, "query")
+  const mealPlanKey = getMealPlanQueryKey();
 
-  const updateMealPlan = trpc.mealPlan.updateMealPlan.useMutation({
-    onMutate: ({ mealPlan: newMealPlan }) => mutate(newMealPlan),
-    onError: (_, __, context) => context?.undo(),
-  });
+  const updateMealPlan = useUpdateMealPlan();
 
   return {
     ...updateMealPlan,
     mutate: (update: IAddOrUpdatePlan) => {
       const currentMealPlan = queryClient.getQueryData(mealPlanKey) as IMealPlan | undefined
       if (!currentMealPlan) throw new Error('Cannot modify empty meal plan')
-      updateMealPlan.mutate({
-        mealPlan: addOrUpdatePlan(currentMealPlan, update),
-      });
+      updateMealPlan.mutate(addOrUpdatePlan(currentMealPlan, update));
     },
   };
 };

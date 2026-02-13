@@ -11,12 +11,12 @@ import Container from "@mui/material/Container";
 import Alert from "@mui/material/Alert";
 import { ComponentAccordions } from "./form_components/component_accordion";
 import { ExitSaveButtons } from "../../../core/exit_save_buttons";
-import { trpc } from "../../../../client";
+import { useDeleteS3Object } from "../../../../client/hooks";
 
 export const FormWithData = ({ recipe }: { recipe: IRecipe }) => {
   const router = useRouter();
   const { mutateAsync, disabled } = usePutRecipeToDynamo();
-  const deleteFromS3 = trpc.s3.delete.useMutation()
+  const deleteFromS3 = useDeleteS3Object()
   const form = useForm<IRecipe>({
     defaultValues: recipe,
   });
@@ -34,9 +34,9 @@ export const FormWithData = ({ recipe }: { recipe: IRecipe }) => {
         .filter(
           (image) => images.findIndex((img) => img.key === image.key) === -1
         )
-        .map(async (image) => await deleteFromS3.mutateAsync({ key: image.key }))
+        .map(async (image) => await deleteFromS3.mutateAsync(image.key))
     );
-    await mutateAsync({ recipe: data });
+    await mutateAsync(data);
     router.push("/food");
   };
 

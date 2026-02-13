@@ -12,7 +12,7 @@ export interface ICopyIngredientsButtonProps {
 export const DownloadSharedRecipe = (props: ICopyIngredientsButtonProps) => {
   const { mutate, isLoading } = usePutRecipeToDynamo();
   const downloadSharedRecipe = async () => {
-    await mutate({ recipe: props.recipe })
+    mutate(props.recipe)
     props.onDownload(props.recipe)
   }
 

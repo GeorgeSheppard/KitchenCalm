@@ -16,7 +16,7 @@ export const WithDeleteDialog = (
   const { mutate, disabled } = useDeleteRecipeFromDynamo();
   const deleteRecipeOnClick = useCallback(() => {
     onDelete?.(uuid);
-    mutate({ recipeId: uuid })
+    mutate(uuid)
   }, [onDelete, mutate, uuid]);
 
   return (

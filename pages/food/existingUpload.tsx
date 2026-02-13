@@ -17,7 +17,7 @@ export default function ExistingUpload() {
     const recipeJson: IRecipe = JSON.parse(recipeString)
     recipeJson.uuid = uuidv4()
     recipeJson.components.forEach(component => component.uuid = uuidv4())
-    await mutateAsync({ recipe: recipeJson })
+    await mutateAsync(recipeJson)
     router.push('/food');
   }
   return (

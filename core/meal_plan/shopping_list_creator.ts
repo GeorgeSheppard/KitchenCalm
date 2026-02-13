@@ -84,19 +84,19 @@ export function createShoppingListData(
 
 const getGroupDescriptionFromIngredient = (ingredient: string): string => {
   const searchIngredient = ingredient.toUpperCase();
-  let group: string | undefined = (foodGroups as any)[searchIngredient];
+  let group: string | undefined = foodGroups[searchIngredient as keyof typeof foodGroups];
   if (!group) {
     const moreSearchIngredients = searchIngredient
       .replace(",", " ")
       .replace("-", " ")
       .split(" ");
     const otherGroup = moreSearchIngredients
-      .map((ingre) => (foodGroups as any)[ingre])
+      .map((ingre) => foodGroups[ingre as keyof typeof foodGroups])
       .find((group) => !!group);
     group = otherGroup;
   }
   const groupDesc: string = group
-    ? (groupDescriptions as any)[group]
+    ? groupDescriptions[group as keyof typeof groupDescriptions]
     : "Unknown";
   return groupDesc;
 };

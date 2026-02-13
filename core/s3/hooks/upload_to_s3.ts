@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { S3Key } from "../../types/general";
 import { useAppSession } from "../../hooks/use_app_session";
-import { usePostKitchencalmS3Upload } from "../../../client/generated/hooks";
+import { useGetUploadUrl } from "../../../client/hooks";
 
 export interface IS3ValidUploadResponse {
   key: S3Key;
@@ -31,7 +31,7 @@ export interface IUseUploadToS3Props {
  */
 export default function useUploadToS3(props: IUseUploadToS3Props) {
   const { loading } = useAppSession();
-  const getUploadUrl = usePostKitchencalmS3Upload();
+  const getUploadUrl = useGetUploadUrl();
 
   const uploadFile = useCallback(
     async (file: File) => {

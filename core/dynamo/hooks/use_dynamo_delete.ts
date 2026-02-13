@@ -3,12 +3,12 @@ import clone from "just-clone";
 import { IMealPlan } from "../../types/meal_plan";
 import { useAppSession } from "../../hooks/use_app_session";
 import { useQueryClient } from "@tanstack/react-query";
-import { useDeleteKitchencalmRecipesUuid, getGetKitchencalmRecipesQueryKey, getGetKitchencalmMealPlanQueryKey } from "../../../client/generated/hooks";
+import { useDeleteRecipe, getRecipesQueryKey, getMealPlanQueryKey } from "../../../client/hooks";
 
 const useDeleteRecipeInCache = () => {
   const queryClient = useQueryClient();
-  const recipesKey = getGetKitchencalmRecipesQueryKey();
-  const mealPlanKey = getGetKitchencalmMealPlanQueryKey();
+  const recipesKey = getRecipesQueryKey();
+  const mealPlanKey = getMealPlanQueryKey();
 
   return (recipeId: RecipeUuid) => {
     const previousRecipes: IRecipes | undefined =
@@ -43,13 +43,19 @@ const useDeleteRecipeInCache = () => {
 export const useDeleteRecipeFromDynamo = () => {
   const { loading } = useAppSession();
   const mutate = useDeleteRecipeInCache();
-  const deleteRecipe = useDeleteKitchencalmRecipesUuid(undefined, {
-    onMutate: ({ uuid }) => mutate(uuid as any),
-    onError: (_, __, context) => context?.undo(),
-  });
+  const deleteRecipe = useDeleteRecipe();
 
   return {
     ...deleteRecipe,
+    mutateAsync: async (uuid: string) => {
+      const context = mutate(uuid as any);
+      try {
+        return await deleteRecipe.mutateAsync(uuid);
+      } catch (error) {
+        context.undo();
+        throw error;
+      }
+    },
     disabled: loading,
   };
 };

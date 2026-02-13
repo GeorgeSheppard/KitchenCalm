@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { S3Key } from "../../../core/types/general";
 import { CardMedia, Skeleton } from "@mui/material";
-import { usePostKitchencalmS3SignedUrl } from "../../../client/generated/hooks";
+import { useGetSignedUrl } from "../../../client/hooks";
 
 export interface IS3CardMediaProps {
   s3Key: S3Key;
@@ -17,13 +17,13 @@ export const S3CardMedia = (props: IS3CardMediaProps) => {
   const [show, setShow] = useState(true);
   const [imageLoading, setImageLoading] = useState(true);
 
-  // Convert query to mutation-based call since the endpoint is POST
-  const { mutate: getSignedUrl, isPending, isError, data } = usePostKitchencalmS3SignedUrl();
+  // Use wrapper hook that handles mutation
+  const { mutateAsync, isLoading, isError, data } = useGetSignedUrl();
 
   // Fetch signed URL when key changes
   useEffect(() => {
     if (s3Key) {
-      getSignedUrl({ key: s3Key });
+      mutateAsync(s3Key);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s3Key]);
@@ -38,11 +38,11 @@ export const S3CardMedia = (props: IS3CardMediaProps) => {
 
   return (
     <div style={{ position: "relative", aspectRatio: "1", width: "100%" }}>
-      {(isPending || imageLoading) && (
+      {(isLoading || imageLoading) && (
         <Skeleton variant="rectangular" height="100%" animation="wave" className={className} />
       )}
       <CardMedia
-        src={data?.signedUrl}
+        src={(data as any)?.signedUrl}
         component="img"
         onError={() => setShow(false)}
         onLoad={() => setImageLoading(false)}

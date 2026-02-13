@@ -19,19 +19,108 @@ import type {
 import axios from "axios";
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 
-export type GetApiRecommendationsId200RecommendationsItem = {
+export interface Recommendation {
   name: string;
   author: string;
   description: string;
   reason: string;
   amazonLink: string;
-};
+}
+
+export interface Image {
+  /** Image timestamp */
+  timestamp: number;
+  /** S3 object key */
+  key: string;
+}
+
+/**
+ * Unit of measurement
+ */
+export type QuantityUnit = (typeof QuantityUnit)[keyof typeof QuantityUnit];
+
+export const QuantityUnit = {
+  none: "none",
+  mL: "mL",
+  L: "L",
+  g: "g",
+  kg: "kg",
+  cup: "cup",
+  tsp: "tsp",
+  tbsp: "tbsp",
+  quantity: "quantity",
+} as const;
+
+export interface Quantity {
+  /** Unit of measurement */
+  unit: QuantityUnit;
+  /** Numeric value */
+  value?: number;
+}
+
+export interface Ingredient {
+  /** Ingredient name */
+  name: string;
+  quantity: Quantity;
+}
+
+export interface Instruction {
+  /** Instruction text */
+  text: string;
+  /** Whether this step is optional */
+  optional?: boolean;
+}
+
+export interface Component {
+  /** Component name */
+  name: string;
+  /** Component UUID */
+  uuid: string;
+  /** List of ingredients */
+  ingredients: Ingredient[];
+  /** List of instructions */
+  instructions: Instruction[];
+  /** Whether component can be made ahead */
+  storeable?: boolean;
+  /** Number of servings */
+  servings?: number;
+}
+
+export interface Recipe {
+  /** Recipe UUID */
+  uuid: string;
+  /** Recipe name */
+  name: string;
+  /** Recipe description */
+  description: string;
+  /** Recipe images */
+  images: Image[];
+  /** Recipe components */
+  components: Component[];
+}
+
+export interface MealPlanEntry {
+  /** Recipe component UUID */
+  componentId: string;
+  /** Number of servings */
+  servings: number;
+}
 
 export type GetApiRecommendationsId200 = {
   /** @nullable */
-  recommendations: GetApiRecommendationsId200RecommendationsItem[] | null;
+  recommendations: Recommendation[] | null;
   hasEmail: boolean;
   isRecurringMonthly: boolean;
+  success: boolean;
+};
+
+export type GetApiRecommendationsId404 = {
+  error: string;
+  success: boolean;
+};
+
+export type GetApiRecommendationsId422 = {
+  error: string;
   success: boolean;
 };
 
@@ -49,9 +138,32 @@ export type PostApiRecommendationsAddEmailBody = {
   recurring?: PostApiRecommendationsAddEmailBodyRecurring;
 };
 
-export type PostApiRecommendationsAddEmail200 = {
-  success?: boolean;
-};
+export type PostApiRecommendationsAddEmail200 =
+  | {
+      success: boolean;
+    }
+  | {
+      success: boolean;
+      error: string;
+    };
+
+export type PostApiRecommendationsAddEmail400 =
+  | {
+      success: boolean;
+    }
+  | {
+      success: boolean;
+      error: string;
+    };
+
+export type PostApiRecommendationsAddEmail404 =
+  | {
+      success: boolean;
+    }
+  | {
+      success: boolean;
+      error: string;
+    };
 
 export type PostApiRecommendationsDeleteEmailBody = {
   requestId: string;
@@ -59,14 +171,32 @@ export type PostApiRecommendationsDeleteEmailBody = {
 
 export type PostApiRecommendationsDeleteEmail200 = { [key: string]: unknown };
 
+export type PostApiRecommendationsDeleteEmail400 = {
+  error: string;
+};
+
 export type PostApiRecommendationsFromBookcaseBody = {
-  /** One or more bookcase images */
+  /** One or more bookcase images. Multiple files can be uploaded with the same field name. */
   bookcase?: Blob;
 };
 
 export type PostApiRecommendationsFromBookcase200 = {
   id: string;
   success: boolean;
+};
+
+export type PostApiRecommendationsFromBookcase400 = {
+  error: string;
+  success: boolean;
+};
+
+export type PostApiRecommendationsFromBookcase500 = {
+  error: string;
+  success: boolean;
+};
+
+export type GetApiQueueDueRecommendations401 = {
+  error: string;
 };
 
 export type PostMcpAuthTokenBody = {
@@ -81,149 +211,335 @@ export type PostMcpAuthToken200 = {
   userId: string;
 };
 
-export type GetKitchencalmRecipes200ImagesItem = {
-  timestamp: number;
-  key: string;
+export type PostMcpAuthToken400 = {
+  error: string;
 };
 
-export type GetKitchencalmRecipes200ComponentsItemIngredientsItemQuantityUnit =
-  (typeof GetKitchencalmRecipes200ComponentsItemIngredientsItemQuantityUnit)[keyof typeof GetKitchencalmRecipes200ComponentsItemIngredientsItemQuantityUnit];
-
-export const GetKitchencalmRecipes200ComponentsItemIngredientsItemQuantityUnit =
-  {
-    none: "none",
-    mL: "mL",
-    L: "L",
-    g: "g",
-    kg: "kg",
-    cup: "cup",
-    tsp: "tsp",
-    tbsp: "tbsp",
-    quantity: "quantity",
-  } as const;
-
-export type GetKitchencalmRecipes200ComponentsItemIngredientsItemQuantity = {
-  unit: GetKitchencalmRecipes200ComponentsItemIngredientsItemQuantityUnit;
-  value?: number;
+export type PostMcpAuthToken401 = {
+  error: string;
 };
 
-export type GetKitchencalmRecipes200ComponentsItemIngredientsItem = {
-  name: string;
-  quantity: GetKitchencalmRecipes200ComponentsItemIngredientsItemQuantity;
+export type GetKitchencalmRecipes200 = { [key: string]: Recipe };
+
+export type GetKitchencalmRecipes401 = {
+  /** Error message */
+  error: string;
 };
 
-export type GetKitchencalmRecipes200ComponentsItemInstructionsItem = {
-  text: string;
-  optional?: boolean;
-};
-
-export type GetKitchencalmRecipes200ComponentsItem = {
-  name: string;
-  uuid: string;
-  ingredients: GetKitchencalmRecipes200ComponentsItemIngredientsItem[];
-  instructions: GetKitchencalmRecipes200ComponentsItemInstructionsItem[];
-  storeable?: boolean;
-  servings?: number;
-};
-
-export type GetKitchencalmRecipes200 = {
-  [key: string]: {
-    uuid: string;
-    name: string;
-    description: string;
-    images: GetKitchencalmRecipes200ImagesItem[];
-    components: GetKitchencalmRecipes200ComponentsItem[];
-  };
-};
-
-export type PutKitchencalmRecipesBodyImagesItem = {
-  timestamp: number;
-  key: string;
-};
-
-export type PutKitchencalmRecipesBodyComponentsItem = {
-  [key: string]: unknown;
+export type GetKitchencalmRecipes500 = {
+  /** Error message */
+  error: string;
 };
 
 export type PutKitchencalmRecipesBody = {
+  /** Recipe UUID (omit to generate new) */
   uuid?: string;
+  /** Recipe name */
   name: string;
+  /** Recipe description */
   description: string;
-  images: PutKitchencalmRecipesBodyImagesItem[];
-  components: PutKitchencalmRecipesBodyComponentsItem[];
+  /** Recipe images */
+  images: Image[];
+  /** Recipe components */
+  components: Component[];
 };
 
 export type PutKitchencalmRecipes200 = {
+  /** Recipe UUID (new or provided) */
   uuid: string;
+  /** Whether update was successful */
   success: boolean;
+};
+
+export type PutKitchencalmRecipes400 = {
+  /** Error message */
+  error: string;
+};
+
+export type PutKitchencalmRecipes401 = {
+  /** Error message */
+  error: string;
+};
+
+export type PutKitchencalmRecipes500 = {
+  /** Error message */
+  error: string;
+};
+
+export type GetKitchencalmRecipesSearchParams = {
+  /**
+   * Search query string
+   * @minLength 1
+   */
+  q: string;
+  /**
+   * Comma-separated fields to search: name,description,ingredients,instructions
+   */
+  fields?: string;
+};
+
+export type GetKitchencalmRecipesSearch200ResultsItem = {
+  /** Recipe UUID */
+  uuid: string;
+  /** Recipe name */
+  name: string;
+  /** Recipe description */
+  description: string;
+  /** Flattened list of ingredient names */
+  ingredients: string[];
+};
+
+export type GetKitchencalmRecipesSearch200 = {
+  /** Array of matching recipes */
+  results: GetKitchencalmRecipesSearch200ResultsItem[];
+  /**
+   * Number of results returned
+   * @minimum 0
+   */
+  count: number;
+};
+
+export type GetKitchencalmRecipesSearch400 = {
+  /** Error message */
+  error: string;
+};
+
+export type GetKitchencalmRecipesSearch401 = {
+  /** Error message */
+  error: string;
+};
+
+export type GetKitchencalmRecipesSearch500 = {
+  /** Error message */
+  error: string;
 };
 
 export type DeleteKitchencalmRecipesUuid200 = {
+  /** Whether delete was successful */
   success: boolean;
+  /** UUID of deleted recipe */
   uuid: string;
 };
 
-export type PostKitchencalmRecipesShareBodyRecipe = { [key: string]: unknown };
+export type DeleteKitchencalmRecipesUuid401 = {
+  /** Error message */
+  error: string;
+};
+
+export type DeleteKitchencalmRecipesUuid500 = {
+  /** Error message */
+  error: string;
+};
+
+export type GetKitchencalmMealPlan200 = {
+  [key: string]: { [key: string]: MealPlanEntry[] };
+};
+
+export type GetKitchencalmMealPlan401 = {
+  /** Error message */
+  error: string;
+};
+
+export type GetKitchencalmMealPlan500 = {
+  /** Error message */
+  error: string;
+};
+
+export type PutKitchencalmMealPlanBody = {
+  [key: string]: { [key: string]: MealPlanEntry[] };
+};
+
+export type PutKitchencalmMealPlan200 = {
+  /** Whether update was successful */
+  success: boolean;
+};
+
+export type PutKitchencalmMealPlan400 = {
+  /** Error message */
+  error: string;
+};
+
+export type PutKitchencalmMealPlan401 = {
+  /** Error message */
+  error: string;
+};
+
+export type PutKitchencalmMealPlan500 = {
+  /** Error message */
+  error: string;
+};
+
+export type GetKitchencalmShoppingListParams = {
+  /**
+   * Filter shopping list from this date (format: DayName - DD/MM/YYYY)
+   */
+  startDate?: string;
+  /**
+   * Filter shopping list until this date (format: DayName - DD/MM/YYYY)
+   */
+  endDate?: string;
+};
+
+export type GetKitchencalmShoppingList401 = {
+  /** Error message */
+  error: string;
+};
+
+export type GetKitchencalmShoppingList500 = {
+  /** Error message */
+  error: string;
+};
+
+export type PostKitchencalmS3SignedUrlBody = {
+  /** S3 object key */
+  key: string;
+};
+
+export type PostKitchencalmS3SignedUrl200 = {
+  /** Signed GET URL valid for download */
+  signedUrl: string;
+};
+
+export type PostKitchencalmS3SignedUrl400 = {
+  /** Error message */
+  error: string;
+};
+
+export type PostKitchencalmS3SignedUrl500 = {
+  /** Error message */
+  error: string;
+};
+
+export type PostKitchencalmS3UploadBody = {
+  /** Original filename */
+  fileName: string;
+  /** MIME type (e.g., "image/jpeg") */
+  contentType: string;
+};
+
+export type PostKitchencalmS3Upload200 = {
+  /** Signed PUT URL valid for upload */
+  signedUrl: string;
+  /** S3 object key where file will be stored */
+  key: string;
+};
+
+export type PostKitchencalmS3Upload400 = {
+  /** Error message */
+  error: string;
+};
+
+export type PostKitchencalmS3Upload401 = {
+  /** Error message */
+  error: string;
+};
+
+export type PostKitchencalmS3Upload500 = {
+  /** Error message */
+  error: string;
+};
+
+export type PostKitchencalmS3DeleteBody = {
+  /** S3 object key to delete */
+  key: string;
+};
+
+export type PostKitchencalmS3Delete200 = {
+  /** Whether delete was successful */
+  success: boolean;
+};
+
+export type PostKitchencalmS3Delete400 = {
+  /** Error message */
+  error: string;
+};
+
+export type PostKitchencalmS3Delete500 = {
+  /** Error message */
+  error: string;
+};
 
 export type PostKitchencalmRecipesShareBody = {
-  recipe: PostKitchencalmRecipesShareBodyRecipe;
+  recipe: Recipe;
 };
 
 export type PostKitchencalmRecipesShare200 = {
+  /** Unique share ID for public access */
   shareId: string;
+};
+
+export type PostKitchencalmRecipesShare400 = {
+  /** Error message */
+  error: string;
+};
+
+export type PostKitchencalmRecipesShare401 = {
+  /** Error message */
+  error: string;
+};
+
+export type PostKitchencalmRecipesShare500 = {
+  /** Error message */
+  error: string;
 };
 
 /**
  * @nullable
  */
 export type GetKitchencalmRecipesSharedShareId200 = {
-  [key: string]: unknown;
+  /** Recipe UUID */
+  uuid: string;
+  /** Recipe name */
+  name: string;
+  /** Recipe description */
+  description: string;
+  images: {
+    /** Image timestamp */
+    timestamp: number;
+    /** S3 object key */
+    key: string;
+  }[];
+  /** Recipe components */
+  components: {
+    /** Component name */
+    name: string;
+    /** Component UUID */
+    uuid: string;
+    ingredients: {
+      /** Ingredient name */
+      name: string;
+      quantity: {
+        unit:
+          | "none"
+          | "mL"
+          | "L"
+          | "g"
+          | "kg"
+          | "cup"
+          | "tsp"
+          | "tbsp"
+          | "quantity";
+        value?: number;
+      };
+    }[];
+    instructions: {
+      /** Instruction text */
+      text: string;
+      optional?: boolean;
+    }[];
+    storeable?: boolean;
+    servings?: number;
+  }[];
 } | null;
 
-export type GetKitchencalmMealPlan200Item = {
-  componentId: string;
-  servings: number;
+export type GetKitchencalmRecipesSharedShareId404 = {
+  /** Error message */
+  error: string;
 };
 
-export type GetKitchencalmMealPlan200 = {
-  [key: string]: { [key: string]: GetKitchencalmMealPlan200Item[] };
-};
-
-export type PutKitchencalmMealPlanBody = { [key: string]: unknown };
-
-export type PutKitchencalmMealPlan200 = {
-  success: boolean;
-};
-
-export type GetKitchencalmShoppingListParams = {
-  startDate?: string;
-  endDate?: string;
-};
-
-export type PostKitchencalmS3SignedUrlBody = {
-  key: string;
-};
-
-export type PostKitchencalmS3SignedUrl200 = {
-  signedUrl: string;
-};
-
-export type PostKitchencalmS3UploadBody = {
-  fileName: string;
-  contentType: string;
-};
-
-export type PostKitchencalmS3Upload200 = {
-  signedUrl: string;
-  key: string;
-};
-
-export type PostKitchencalmS3DeleteBody = {
-  key: string;
-};
-
-export type PostKitchencalmS3Delete200 = {
-  success: boolean;
+export type GetKitchencalmRecipesSharedShareId500 = {
+  /** Error message */
+  error: string;
 };
 
 export const getApiRecommendationsId = (
@@ -242,7 +558,7 @@ export const getGetApiRecommendationsIdQueryKey = (id: string) => {
 
 export const getGetApiRecommendationsIdQueryOptions = <
   TData = Awaited<ReturnType<typeof getApiRecommendationsId>>,
-  TError = AxiosError<unknown>,
+  TError = AxiosError<GetApiRecommendationsId404 | GetApiRecommendationsId422>,
 >(
   id: string,
   options?: {
@@ -278,11 +594,13 @@ export const getGetApiRecommendationsIdQueryOptions = <
 export type GetApiRecommendationsIdQueryResult = NonNullable<
   Awaited<ReturnType<typeof getApiRecommendationsId>>
 >;
-export type GetApiRecommendationsIdQueryError = AxiosError<unknown>;
+export type GetApiRecommendationsIdQueryError = AxiosError<
+  GetApiRecommendationsId404 | GetApiRecommendationsId422
+>;
 
 export function useGetApiRecommendationsId<
   TData = Awaited<ReturnType<typeof getApiRecommendationsId>>,
-  TError = AxiosError<unknown>,
+  TError = AxiosError<GetApiRecommendationsId404 | GetApiRecommendationsId422>,
 >(
   id: string,
   options?: {
@@ -327,7 +645,9 @@ export const postApiRecommendationsAddEmail = (
 };
 
 export const getPostApiRecommendationsAddEmailMutationOptions = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    PostApiRecommendationsAddEmail400 | PostApiRecommendationsAddEmail404
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -369,10 +689,14 @@ export type PostApiRecommendationsAddEmailMutationResult = NonNullable<
 >;
 export type PostApiRecommendationsAddEmailMutationBody =
   PostApiRecommendationsAddEmailBody;
-export type PostApiRecommendationsAddEmailMutationError = AxiosError<unknown>;
+export type PostApiRecommendationsAddEmailMutationError = AxiosError<
+  PostApiRecommendationsAddEmail400 | PostApiRecommendationsAddEmail404
+>;
 
 export const usePostApiRecommendationsAddEmail = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    PostApiRecommendationsAddEmail400 | PostApiRecommendationsAddEmail404
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -409,7 +733,7 @@ export const postApiRecommendationsDeleteEmail = (
 };
 
 export const getPostApiRecommendationsDeleteEmailMutationOptions = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<PostApiRecommendationsDeleteEmail400>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -452,10 +776,10 @@ export type PostApiRecommendationsDeleteEmailMutationResult = NonNullable<
 export type PostApiRecommendationsDeleteEmailMutationBody =
   PostApiRecommendationsDeleteEmailBody;
 export type PostApiRecommendationsDeleteEmailMutationError =
-  AxiosError<unknown>;
+  AxiosError<PostApiRecommendationsDeleteEmail400>;
 
 export const usePostApiRecommendationsDeleteEmail = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<PostApiRecommendationsDeleteEmail400>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -496,7 +820,10 @@ export const postApiRecommendationsFromBookcase = (
 };
 
 export const getPostApiRecommendationsFromBookcaseMutationOptions = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    | PostApiRecommendationsFromBookcase400
+    | PostApiRecommendationsFromBookcase500
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -538,11 +865,15 @@ export type PostApiRecommendationsFromBookcaseMutationResult = NonNullable<
 >;
 export type PostApiRecommendationsFromBookcaseMutationBody =
   PostApiRecommendationsFromBookcaseBody;
-export type PostApiRecommendationsFromBookcaseMutationError =
-  AxiosError<unknown>;
+export type PostApiRecommendationsFromBookcaseMutationError = AxiosError<
+  PostApiRecommendationsFromBookcase400 | PostApiRecommendationsFromBookcase500
+>;
 
 export const usePostApiRecommendationsFromBookcase = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    | PostApiRecommendationsFromBookcase400
+    | PostApiRecommendationsFromBookcase500
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -563,6 +894,75 @@ export const usePostApiRecommendationsFromBookcase = <
   );
 };
 
+export const getApiQueueDueRecommendations = (
+  options?: AxiosRequestConfig,
+): Promise<AxiosResponse<void>> => {
+  return axios.get(
+    `https://api.georgesheppard.dev/api/queue-due-recommendations`,
+    options,
+  );
+};
+
+export const getGetApiQueueDueRecommendationsQueryKey = () => {
+  return [
+    `https://api.georgesheppard.dev/api/queue-due-recommendations`,
+  ] as const;
+};
+
+export const getGetApiQueueDueRecommendationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getApiQueueDueRecommendations>>,
+  TError = AxiosError<GetApiQueueDueRecommendations401>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getApiQueueDueRecommendations>>,
+    TError,
+    TData
+  >;
+  axios?: AxiosRequestConfig;
+}) => {
+  const { query: queryOptions, axios: axiosOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetApiQueueDueRecommendationsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getApiQueueDueRecommendations>>
+  > = ({ signal }) =>
+    getApiQueueDueRecommendations({ signal, ...axiosOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getApiQueueDueRecommendations>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetApiQueueDueRecommendationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getApiQueueDueRecommendations>>
+>;
+export type GetApiQueueDueRecommendationsQueryError =
+  AxiosError<GetApiQueueDueRecommendations401>;
+
+export function useGetApiQueueDueRecommendations<
+  TData = Awaited<ReturnType<typeof getApiQueueDueRecommendations>>,
+  TError = AxiosError<GetApiQueueDueRecommendations401>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getApiQueueDueRecommendations>>,
+    TError,
+    TData
+  >;
+  axios?: AxiosRequestConfig;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetApiQueueDueRecommendationsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
 /**
  * Generate a JWT token for authenticated users
  */
@@ -578,7 +978,7 @@ export const postMcpAuthToken = (
 };
 
 export const getPostMcpAuthTokenMutationOptions = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<PostMcpAuthToken400 | PostMcpAuthToken401>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -619,10 +1019,12 @@ export type PostMcpAuthTokenMutationResult = NonNullable<
   Awaited<ReturnType<typeof postMcpAuthToken>>
 >;
 export type PostMcpAuthTokenMutationBody = PostMcpAuthTokenBody;
-export type PostMcpAuthTokenMutationError = AxiosError<unknown>;
+export type PostMcpAuthTokenMutationError = AxiosError<
+  PostMcpAuthToken400 | PostMcpAuthToken401
+>;
 
 export const usePostMcpAuthToken = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<PostMcpAuthToken400 | PostMcpAuthToken401>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -659,7 +1061,7 @@ export const getGetKitchencalmRecipesQueryKey = () => {
 
 export const getGetKitchencalmRecipesQueryOptions = <
   TData = Awaited<ReturnType<typeof getKitchencalmRecipes>>,
-  TError = AxiosError<unknown>,
+  TError = AxiosError<GetKitchencalmRecipes401 | GetKitchencalmRecipes500>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getKitchencalmRecipes>>,
@@ -686,11 +1088,13 @@ export const getGetKitchencalmRecipesQueryOptions = <
 export type GetKitchencalmRecipesQueryResult = NonNullable<
   Awaited<ReturnType<typeof getKitchencalmRecipes>>
 >;
-export type GetKitchencalmRecipesQueryError = AxiosError<unknown>;
+export type GetKitchencalmRecipesQueryError = AxiosError<
+  GetKitchencalmRecipes401 | GetKitchencalmRecipes500
+>;
 
 export function useGetKitchencalmRecipes<
   TData = Awaited<ReturnType<typeof getKitchencalmRecipes>>,
-  TError = AxiosError<unknown>,
+  TError = AxiosError<GetKitchencalmRecipes401 | GetKitchencalmRecipes500>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getKitchencalmRecipes>>,
@@ -709,7 +1113,7 @@ export function useGetKitchencalmRecipes<
 }
 
 /**
- * Create or update a recipe
+ * Create or update a recipe for the authenticated user
  */
 export const putKitchencalmRecipes = (
   putKitchencalmRecipesBody: PutKitchencalmRecipesBody,
@@ -723,7 +1127,11 @@ export const putKitchencalmRecipes = (
 };
 
 export const getPutKitchencalmRecipesMutationOptions = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    | PutKitchencalmRecipes400
+    | PutKitchencalmRecipes401
+    | PutKitchencalmRecipes500
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -764,10 +1172,16 @@ export type PutKitchencalmRecipesMutationResult = NonNullable<
   Awaited<ReturnType<typeof putKitchencalmRecipes>>
 >;
 export type PutKitchencalmRecipesMutationBody = PutKitchencalmRecipesBody;
-export type PutKitchencalmRecipesMutationError = AxiosError<unknown>;
+export type PutKitchencalmRecipesMutationError = AxiosError<
+  PutKitchencalmRecipes400 | PutKitchencalmRecipes401 | PutKitchencalmRecipes500
+>;
 
 export const usePutKitchencalmRecipes = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    | PutKitchencalmRecipes400
+    | PutKitchencalmRecipes401
+    | PutKitchencalmRecipes500
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -787,7 +1201,106 @@ export const usePutKitchencalmRecipes = <
 };
 
 /**
- * Delete a recipe
+ * Search recipes by name, description, ingredients, or instructions
+ */
+export const getKitchencalmRecipesSearch = (
+  params: GetKitchencalmRecipesSearchParams,
+  options?: AxiosRequestConfig,
+): Promise<AxiosResponse<GetKitchencalmRecipesSearch200>> => {
+  return axios.get(
+    `https://api.georgesheppard.dev/kitchencalm/recipes/search`,
+    {
+      ...options,
+      params: { ...params, ...options?.params },
+    },
+  );
+};
+
+export const getGetKitchencalmRecipesSearchQueryKey = (
+  params?: GetKitchencalmRecipesSearchParams,
+) => {
+  return [
+    `https://api.georgesheppard.dev/kitchencalm/recipes/search`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetKitchencalmRecipesSearchQueryOptions = <
+  TData = Awaited<ReturnType<typeof getKitchencalmRecipesSearch>>,
+  TError = AxiosError<
+    | GetKitchencalmRecipesSearch400
+    | GetKitchencalmRecipesSearch401
+    | GetKitchencalmRecipesSearch500
+  >,
+>(
+  params: GetKitchencalmRecipesSearchParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getKitchencalmRecipesSearch>>,
+      TError,
+      TData
+    >;
+    axios?: AxiosRequestConfig;
+  },
+) => {
+  const { query: queryOptions, axios: axiosOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetKitchencalmRecipesSearchQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getKitchencalmRecipesSearch>>
+  > = ({ signal }) =>
+    getKitchencalmRecipesSearch(params, { signal, ...axiosOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getKitchencalmRecipesSearch>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetKitchencalmRecipesSearchQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getKitchencalmRecipesSearch>>
+>;
+export type GetKitchencalmRecipesSearchQueryError = AxiosError<
+  | GetKitchencalmRecipesSearch400
+  | GetKitchencalmRecipesSearch401
+  | GetKitchencalmRecipesSearch500
+>;
+
+export function useGetKitchencalmRecipesSearch<
+  TData = Awaited<ReturnType<typeof getKitchencalmRecipesSearch>>,
+  TError = AxiosError<
+    | GetKitchencalmRecipesSearch400
+    | GetKitchencalmRecipesSearch401
+    | GetKitchencalmRecipesSearch500
+  >,
+>(
+  params: GetKitchencalmRecipesSearchParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getKitchencalmRecipesSearch>>,
+      TError,
+      TData
+    >;
+    axios?: AxiosRequestConfig;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetKitchencalmRecipesSearchQueryOptions(
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Delete a recipe for the authenticated user
  */
 export const deleteKitchencalmRecipesUuid = (
   uuid: string,
@@ -800,7 +1313,9 @@ export const deleteKitchencalmRecipesUuid = (
 };
 
 export const getDeleteKitchencalmRecipesUuidMutationOptions = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    DeleteKitchencalmRecipesUuid401 | DeleteKitchencalmRecipesUuid500
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -841,10 +1356,14 @@ export type DeleteKitchencalmRecipesUuidMutationResult = NonNullable<
   Awaited<ReturnType<typeof deleteKitchencalmRecipesUuid>>
 >;
 
-export type DeleteKitchencalmRecipesUuidMutationError = AxiosError<unknown>;
+export type DeleteKitchencalmRecipesUuidMutationError = AxiosError<
+  DeleteKitchencalmRecipesUuid401 | DeleteKitchencalmRecipesUuid500
+>;
 
 export const useDeleteKitchencalmRecipesUuid = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    DeleteKitchencalmRecipesUuid401 | DeleteKitchencalmRecipesUuid500
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -864,174 +1383,6 @@ export const useDeleteKitchencalmRecipesUuid = <
 };
 
 /**
- * Create a shareable link for a recipe
- */
-export const postKitchencalmRecipesShare = (
-  postKitchencalmRecipesShareBody: PostKitchencalmRecipesShareBody,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<PostKitchencalmRecipesShare200>> => {
-  return axios.post(
-    `https://api.georgesheppard.dev/kitchencalm/recipes/share`,
-    postKitchencalmRecipesShareBody,
-    options,
-  );
-};
-
-export const getPostKitchencalmRecipesShareMutationOptions = <
-  TError = AxiosError<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof postKitchencalmRecipesShare>>,
-    TError,
-    { data: PostKitchencalmRecipesShareBody },
-    TContext
-  >;
-  axios?: AxiosRequestConfig;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof postKitchencalmRecipesShare>>,
-  TError,
-  { data: PostKitchencalmRecipesShareBody },
-  TContext
-> => {
-  const mutationKey = ["postKitchencalmRecipesShare"];
-  const { mutation: mutationOptions, axios: axiosOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, axios: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof postKitchencalmRecipesShare>>,
-    { data: PostKitchencalmRecipesShareBody }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return postKitchencalmRecipesShare(data, axiosOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type PostKitchencalmRecipesShareMutationResult = NonNullable<
-  Awaited<ReturnType<typeof postKitchencalmRecipesShare>>
->;
-export type PostKitchencalmRecipesShareMutationBody =
-  PostKitchencalmRecipesShareBody;
-export type PostKitchencalmRecipesShareMutationError = AxiosError<unknown>;
-
-export const usePostKitchencalmRecipesShare = <
-  TError = AxiosError<unknown>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof postKitchencalmRecipesShare>>,
-    TError,
-    { data: PostKitchencalmRecipesShareBody },
-    TContext
-  >;
-  axios?: AxiosRequestConfig;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof postKitchencalmRecipesShare>>,
-  TError,
-  { data: PostKitchencalmRecipesShareBody },
-  TContext
-> => {
-  return useMutation(getPostKitchencalmRecipesShareMutationOptions(options));
-};
-
-/**
- * Get a publicly shared recipe by share ID
- */
-export const getKitchencalmRecipesSharedShareId = (
-  shareId: string,
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<GetKitchencalmRecipesSharedShareId200>> => {
-  return axios.get(
-    `https://api.georgesheppard.dev/kitchencalm/recipes/shared/${shareId}`,
-    options,
-  );
-};
-
-export const getGetKitchencalmRecipesSharedShareIdQueryKey = (
-  shareId: string,
-) => {
-  return [
-    `https://api.georgesheppard.dev/kitchencalm/recipes/shared/${shareId}`,
-  ] as const;
-};
-
-export const getGetKitchencalmRecipesSharedShareIdQueryOptions = <
-  TData = Awaited<ReturnType<typeof getKitchencalmRecipesSharedShareId>>,
-  TError = AxiosError<unknown>,
->(
-  shareId: string,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof getKitchencalmRecipesSharedShareId>>,
-      TError,
-      TData
-    >;
-    axios?: AxiosRequestConfig;
-  },
-) => {
-  const { query: queryOptions, axios: axiosOptions } = options ?? {};
-
-  const queryKey =
-    queryOptions?.queryKey ??
-    getGetKitchencalmRecipesSharedShareIdQueryKey(shareId);
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof getKitchencalmRecipesSharedShareId>>
-  > = ({ signal }) =>
-    getKitchencalmRecipesSharedShareId(shareId, { signal, ...axiosOptions });
-
-  return {
-    queryKey,
-    queryFn,
-    enabled: !!shareId,
-    ...queryOptions,
-  } as UseQueryOptions<
-    Awaited<ReturnType<typeof getKitchencalmRecipesSharedShareId>>,
-    TError,
-    TData
-  > & { queryKey: QueryKey };
-};
-
-export type GetKitchencalmRecipesSharedShareIdQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getKitchencalmRecipesSharedShareId>>
->;
-export type GetKitchencalmRecipesSharedShareIdQueryError = AxiosError<unknown>;
-
-export function useGetKitchencalmRecipesSharedShareId<
-  TData = Awaited<ReturnType<typeof getKitchencalmRecipesSharedShareId>>,
-  TError = AxiosError<unknown>,
->(
-  shareId: string,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof getKitchencalmRecipesSharedShareId>>,
-      TError,
-      TData
-    >;
-    axios?: AxiosRequestConfig;
-  },
-): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetKitchencalmRecipesSharedShareIdQueryOptions(
-    shareId,
-    options,
-  );
-
-  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
-    queryKey: QueryKey;
-  };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-/**
  * Get the meal plan for the authenticated user
  */
 export const getKitchencalmMealPlan = (
@@ -1049,7 +1400,7 @@ export const getGetKitchencalmMealPlanQueryKey = () => {
 
 export const getGetKitchencalmMealPlanQueryOptions = <
   TData = Awaited<ReturnType<typeof getKitchencalmMealPlan>>,
-  TError = AxiosError<unknown>,
+  TError = AxiosError<GetKitchencalmMealPlan401 | GetKitchencalmMealPlan500>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getKitchencalmMealPlan>>,
@@ -1077,11 +1428,13 @@ export const getGetKitchencalmMealPlanQueryOptions = <
 export type GetKitchencalmMealPlanQueryResult = NonNullable<
   Awaited<ReturnType<typeof getKitchencalmMealPlan>>
 >;
-export type GetKitchencalmMealPlanQueryError = AxiosError<unknown>;
+export type GetKitchencalmMealPlanQueryError = AxiosError<
+  GetKitchencalmMealPlan401 | GetKitchencalmMealPlan500
+>;
 
 export function useGetKitchencalmMealPlan<
   TData = Awaited<ReturnType<typeof getKitchencalmMealPlan>>,
-  TError = AxiosError<unknown>,
+  TError = AxiosError<GetKitchencalmMealPlan401 | GetKitchencalmMealPlan500>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getKitchencalmMealPlan>>,
@@ -1114,7 +1467,11 @@ export const putKitchencalmMealPlan = (
 };
 
 export const getPutKitchencalmMealPlanMutationOptions = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    | PutKitchencalmMealPlan400
+    | PutKitchencalmMealPlan401
+    | PutKitchencalmMealPlan500
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1155,10 +1512,18 @@ export type PutKitchencalmMealPlanMutationResult = NonNullable<
   Awaited<ReturnType<typeof putKitchencalmMealPlan>>
 >;
 export type PutKitchencalmMealPlanMutationBody = PutKitchencalmMealPlanBody;
-export type PutKitchencalmMealPlanMutationError = AxiosError<unknown>;
+export type PutKitchencalmMealPlanMutationError = AxiosError<
+  | PutKitchencalmMealPlan400
+  | PutKitchencalmMealPlan401
+  | PutKitchencalmMealPlan500
+>;
 
 export const usePutKitchencalmMealPlan = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    | PutKitchencalmMealPlan400
+    | PutKitchencalmMealPlan401
+    | PutKitchencalmMealPlan500
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1178,7 +1543,7 @@ export const usePutKitchencalmMealPlan = <
 };
 
 /**
- * Get shopping list
+ * Get aggregated shopping list from recipes in the meal plan, optionally filtered by date range
  */
 export const getKitchencalmShoppingList = (
   params?: GetKitchencalmShoppingListParams,
@@ -1202,7 +1567,9 @@ export const getGetKitchencalmShoppingListQueryKey = (
 
 export const getGetKitchencalmShoppingListQueryOptions = <
   TData = Awaited<ReturnType<typeof getKitchencalmShoppingList>>,
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    GetKitchencalmShoppingList401 | GetKitchencalmShoppingList500
+  >,
 >(
   params?: GetKitchencalmShoppingListParams,
   options?: {
@@ -1234,11 +1601,15 @@ export const getGetKitchencalmShoppingListQueryOptions = <
 export type GetKitchencalmShoppingListQueryResult = NonNullable<
   Awaited<ReturnType<typeof getKitchencalmShoppingList>>
 >;
-export type GetKitchencalmShoppingListQueryError = AxiosError<unknown>;
+export type GetKitchencalmShoppingListQueryError = AxiosError<
+  GetKitchencalmShoppingList401 | GetKitchencalmShoppingList500
+>;
 
 export function useGetKitchencalmShoppingList<
   TData = Awaited<ReturnType<typeof getKitchencalmShoppingList>>,
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    GetKitchencalmShoppingList401 | GetKitchencalmShoppingList500
+  >,
 >(
   params?: GetKitchencalmShoppingListParams,
   options?: {
@@ -1277,7 +1648,9 @@ export const postKitchencalmS3SignedUrl = (
 };
 
 export const getPostKitchencalmS3SignedUrlMutationOptions = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    PostKitchencalmS3SignedUrl400 | PostKitchencalmS3SignedUrl500
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1319,10 +1692,14 @@ export type PostKitchencalmS3SignedUrlMutationResult = NonNullable<
 >;
 export type PostKitchencalmS3SignedUrlMutationBody =
   PostKitchencalmS3SignedUrlBody;
-export type PostKitchencalmS3SignedUrlMutationError = AxiosError<unknown>;
+export type PostKitchencalmS3SignedUrlMutationError = AxiosError<
+  PostKitchencalmS3SignedUrl400 | PostKitchencalmS3SignedUrl500
+>;
 
 export const usePostKitchencalmS3SignedUrl = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    PostKitchencalmS3SignedUrl400 | PostKitchencalmS3SignedUrl500
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1356,7 +1733,11 @@ export const postKitchencalmS3Upload = (
 };
 
 export const getPostKitchencalmS3UploadMutationOptions = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    | PostKitchencalmS3Upload400
+    | PostKitchencalmS3Upload401
+    | PostKitchencalmS3Upload500
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1397,10 +1778,18 @@ export type PostKitchencalmS3UploadMutationResult = NonNullable<
   Awaited<ReturnType<typeof postKitchencalmS3Upload>>
 >;
 export type PostKitchencalmS3UploadMutationBody = PostKitchencalmS3UploadBody;
-export type PostKitchencalmS3UploadMutationError = AxiosError<unknown>;
+export type PostKitchencalmS3UploadMutationError = AxiosError<
+  | PostKitchencalmS3Upload400
+  | PostKitchencalmS3Upload401
+  | PostKitchencalmS3Upload500
+>;
 
 export const usePostKitchencalmS3Upload = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<
+    | PostKitchencalmS3Upload400
+    | PostKitchencalmS3Upload401
+    | PostKitchencalmS3Upload500
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1434,7 +1823,7 @@ export const postKitchencalmS3Delete = (
 };
 
 export const getPostKitchencalmS3DeleteMutationOptions = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<PostKitchencalmS3Delete400 | PostKitchencalmS3Delete500>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1475,10 +1864,12 @@ export type PostKitchencalmS3DeleteMutationResult = NonNullable<
   Awaited<ReturnType<typeof postKitchencalmS3Delete>>
 >;
 export type PostKitchencalmS3DeleteMutationBody = PostKitchencalmS3DeleteBody;
-export type PostKitchencalmS3DeleteMutationError = AxiosError<unknown>;
+export type PostKitchencalmS3DeleteMutationError = AxiosError<
+  PostKitchencalmS3Delete400 | PostKitchencalmS3Delete500
+>;
 
 export const usePostKitchencalmS3Delete = <
-  TError = AxiosError<unknown>,
+  TError = AxiosError<PostKitchencalmS3Delete400 | PostKitchencalmS3Delete500>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1496,3 +1887,174 @@ export const usePostKitchencalmS3Delete = <
 > => {
   return useMutation(getPostKitchencalmS3DeleteMutationOptions(options));
 };
+
+/**
+ * Create a shareable public link for a recipe
+ */
+export const postKitchencalmRecipesShare = (
+  postKitchencalmRecipesShareBody: PostKitchencalmRecipesShareBody,
+  options?: AxiosRequestConfig,
+): Promise<AxiosResponse<PostKitchencalmRecipesShare200>> => {
+  return axios.post(
+    `https://api.georgesheppard.dev/kitchencalm/recipes/share`,
+    postKitchencalmRecipesShareBody,
+    options,
+  );
+};
+
+export const getPostKitchencalmRecipesShareMutationOptions = <
+  TError = AxiosError<
+    | PostKitchencalmRecipesShare400
+    | PostKitchencalmRecipesShare401
+    | PostKitchencalmRecipesShare500
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postKitchencalmRecipesShare>>,
+    TError,
+    { data: PostKitchencalmRecipesShareBody },
+    TContext
+  >;
+  axios?: AxiosRequestConfig;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postKitchencalmRecipesShare>>,
+  TError,
+  { data: PostKitchencalmRecipesShareBody },
+  TContext
+> => {
+  const mutationKey = ["postKitchencalmRecipesShare"];
+  const { mutation: mutationOptions, axios: axiosOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, axios: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postKitchencalmRecipesShare>>,
+    { data: PostKitchencalmRecipesShareBody }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return postKitchencalmRecipesShare(data, axiosOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PostKitchencalmRecipesShareMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postKitchencalmRecipesShare>>
+>;
+export type PostKitchencalmRecipesShareMutationBody =
+  PostKitchencalmRecipesShareBody;
+export type PostKitchencalmRecipesShareMutationError = AxiosError<
+  | PostKitchencalmRecipesShare400
+  | PostKitchencalmRecipesShare401
+  | PostKitchencalmRecipesShare500
+>;
+
+export const usePostKitchencalmRecipesShare = <
+  TError = AxiosError<
+    | PostKitchencalmRecipesShare400
+    | PostKitchencalmRecipesShare401
+    | PostKitchencalmRecipesShare500
+  >,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postKitchencalmRecipesShare>>,
+    TError,
+    { data: PostKitchencalmRecipesShareBody },
+    TContext
+  >;
+  axios?: AxiosRequestConfig;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof postKitchencalmRecipesShare>>,
+  TError,
+  { data: PostKitchencalmRecipesShareBody },
+  TContext
+> => {
+  return useMutation(getPostKitchencalmRecipesShareMutationOptions(options));
+};
+
+/**
+ * Get a publicly shared recipe by share ID
+ */
+export const getKitchencalmRecipesSharedShareId = (
+  options?: AxiosRequestConfig,
+): Promise<AxiosResponse<GetKitchencalmRecipesSharedShareId200>> => {
+  return axios.get(
+    `https://api.georgesheppard.dev/kitchencalm/recipes/shared/:shareId`,
+    options,
+  );
+};
+
+export const getGetKitchencalmRecipesSharedShareIdQueryKey = () => {
+  return [
+    `https://api.georgesheppard.dev/kitchencalm/recipes/shared/:shareId`,
+  ] as const;
+};
+
+export const getGetKitchencalmRecipesSharedShareIdQueryOptions = <
+  TData = Awaited<ReturnType<typeof getKitchencalmRecipesSharedShareId>>,
+  TError = AxiosError<
+    | GetKitchencalmRecipesSharedShareId404
+    | GetKitchencalmRecipesSharedShareId500
+  >,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getKitchencalmRecipesSharedShareId>>,
+    TError,
+    TData
+  >;
+  axios?: AxiosRequestConfig;
+}) => {
+  const { query: queryOptions, axios: axiosOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetKitchencalmRecipesSharedShareIdQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getKitchencalmRecipesSharedShareId>>
+  > = ({ signal }) =>
+    getKitchencalmRecipesSharedShareId({ signal, ...axiosOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getKitchencalmRecipesSharedShareId>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetKitchencalmRecipesSharedShareIdQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getKitchencalmRecipesSharedShareId>>
+>;
+export type GetKitchencalmRecipesSharedShareIdQueryError = AxiosError<
+  GetKitchencalmRecipesSharedShareId404 | GetKitchencalmRecipesSharedShareId500
+>;
+
+export function useGetKitchencalmRecipesSharedShareId<
+  TData = Awaited<ReturnType<typeof getKitchencalmRecipesSharedShareId>>,
+  TError = AxiosError<
+    | GetKitchencalmRecipesSharedShareId404
+    | GetKitchencalmRecipesSharedShareId500
+  >,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getKitchencalmRecipesSharedShareId>>,
+    TError,
+    TData
+  >;
+  axios?: AxiosRequestConfig;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions =
+    getGetKitchencalmRecipesSharedShareIdQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}

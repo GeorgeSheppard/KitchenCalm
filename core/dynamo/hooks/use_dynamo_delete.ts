@@ -48,7 +48,7 @@ export const useDeleteRecipeFromDynamo = () => {
   return {
     ...deleteRecipe,
     mutateAsync: async (uuid: string) => {
-      const context = mutate(uuid as any);
+      const context = mutate(uuid as RecipeUuid);
       try {
         return await deleteRecipe.mutateAsync(uuid);
       } catch (error) {

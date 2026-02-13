@@ -21,7 +21,7 @@ const useRecipesBase = <T>({
   });
 
   // Convert API response (object) to Map format for compatibility
-  const recipesMap: IRecipes = recipesQuery.data ? new Map(Object.entries(recipesQuery.data as any)) : new Map();
+  const recipesMap: IRecipes = recipesQuery.data ? new Map(Object.entries(recipesQuery.data)) : new Map();
 
   return {
     ...recipesQuery,

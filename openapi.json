@@ -12,7 +12,210 @@
     }
   ],
   "components": {
-    "schemas": {},
+    "schemas": {
+      "Recommendation": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "amazonLink": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "author",
+          "description",
+          "reason",
+          "amazonLink"
+        ]
+      },
+      "Recipe": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Recipe UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Recipe name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Recipe description"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Image"
+            },
+            "description": "Recipe images"
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Component"
+            },
+            "description": "Recipe components"
+          }
+        },
+        "required": [
+          "uuid",
+          "name",
+          "description",
+          "images",
+          "components"
+        ]
+      },
+      "Image": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "description": "Image timestamp"
+          },
+          "key": {
+            "type": "string",
+            "description": "S3 object key"
+          }
+        },
+        "required": [
+          "timestamp",
+          "key"
+        ]
+      },
+      "Component": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Component name"
+          },
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Component UUID"
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Ingredient"
+            },
+            "description": "List of ingredients"
+          },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Instruction"
+            },
+            "description": "List of instructions"
+          },
+          "storeable": {
+            "type": "boolean",
+            "description": "Whether component can be made ahead"
+          },
+          "servings": {
+            "type": "number",
+            "description": "Number of servings"
+          }
+        },
+        "required": [
+          "name",
+          "uuid",
+          "ingredients",
+          "instructions"
+        ]
+      },
+      "Ingredient": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Ingredient name"
+          },
+          "quantity": {
+            "$ref": "#/components/schemas/Quantity"
+          }
+        },
+        "required": [
+          "name",
+          "quantity"
+        ]
+      },
+      "Quantity": {
+        "type": "object",
+        "properties": {
+          "unit": {
+            "type": "string",
+            "enum": [
+              "none",
+              "mL",
+              "L",
+              "g",
+              "kg",
+              "cup",
+              "tsp",
+              "tbsp",
+              "quantity"
+            ],
+            "description": "Unit of measurement"
+          },
+          "value": {
+            "type": "number",
+            "description": "Numeric value"
+          }
+        },
+        "required": [
+          "unit"
+        ]
+      },
+      "Instruction": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Instruction text"
+          },
+          "optional": {
+            "type": "boolean",
+            "description": "Whether this step is optional"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "MealPlanEntry": {
+        "type": "object",
+        "properties": {
+          "componentId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Recipe component UUID"
+          },
+          "servings": {
+            "type": "number",
+            "description": "Number of servings"
+          }
+        },
+        "required": [
+          "componentId",
+          "servings"
+        ]
+      }
+    },
     "parameters": {}
   },
   "paths": {
@@ -44,31 +247,7 @@
                       "type": "array",
                       "nullable": true,
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "name": {
-                            "type": "string"
-                          },
-                          "author": {
-                            "type": "string"
-                          },
-                          "description": {
-                            "type": "string"
-                          },
-                          "reason": {
-                            "type": "string"
-                          },
-                          "amazonLink": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "name",
-                          "author",
-                          "description",
-                          "reason",
-                          "amazonLink"
-                        ]
+                        "$ref": "#/components/schemas/Recommendation"
                       }
                     },
                     "hasEmail": {
@@ -88,6 +267,56 @@
                     "recommendations",
                     "hasEmail",
                     "isRecurringMonthly",
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recommendation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unable to create recommendations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error",
                     "success"
                   ]
                 }
@@ -137,12 +366,126 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        },
+                        "error": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "success",
+                        "error"
+                      ]
                     }
-                  }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        },
+                        "error": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "success",
+                        "error"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recommendation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            true
+                          ]
+                        }
+                      },
+                      "required": [
+                        "success"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [
+                            false
+                          ]
+                        },
+                        "error": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "success",
+                        "error"
+                      ]
+                    }
+                  ]
                 }
               }
             }
@@ -185,6 +528,24 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -203,7 +564,7 @@
                   "bookcase": {
                     "type": "string",
                     "format": "binary",
-                    "description": "One or more bookcase images"
+                    "description": "One or more bookcase images. Multiple files can be uploaded with the same field name."
                   }
                 }
               }
@@ -236,6 +597,103 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "No files uploaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to queue recommendation processing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/queue-due-recommendations": {
+      "get": {
+        "tags": [
+          "cron"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Recommendations queued successfully"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -246,6 +704,23 @@
           "mcp"
         ],
         "description": "Generate a JWT token for authenticated users",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -291,6 +766,42 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -302,6 +813,23 @@
           "recipes"
         ],
         "description": "Get all recipes for the authenticated user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer token with JWT"
+            },
+            "required": true,
+            "description": "Bearer token with JWT",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Recipes retrieved successfully",
@@ -310,129 +838,46 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "object",
-                    "properties": {
-                      "uuid": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "name": {
-                        "type": "string"
-                      },
-                      "description": {
-                        "type": "string"
-                      },
-                      "images": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "timestamp": {
-                              "type": "number"
-                            },
-                            "key": {
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "timestamp",
-                            "key"
-                          ]
-                        }
-                      },
-                      "components": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "name": {
-                              "type": "string"
-                            },
-                            "uuid": {
-                              "type": "string",
-                              "format": "uuid"
-                            },
-                            "ingredients": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "quantity": {
-                                    "type": "object",
-                                    "properties": {
-                                      "unit": {
-                                        "type": "string",
-                                        "enum": [
-                                          "none",
-                                          "mL",
-                                          "L",
-                                          "g",
-                                          "kg",
-                                          "cup",
-                                          "tsp",
-                                          "tbsp",
-                                          "quantity"
-                                        ]
-                                      },
-                                      "value": {
-                                        "type": "number"
-                                      }
-                                    },
-                                    "required": [
-                                      "unit"
-                                    ]
-                                  }
-                                },
-                                "required": [
-                                  "name",
-                                  "quantity"
-                                ]
-                              }
-                            },
-                            "instructions": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "text": {
-                                    "type": "string"
-                                  },
-                                  "optional": {
-                                    "type": "boolean"
-                                  }
-                                },
-                                "required": [
-                                  "text"
-                                ]
-                              }
-                            },
-                            "storeable": {
-                              "type": "boolean"
-                            },
-                            "servings": {
-                              "type": "number"
-                            }
-                          },
-                          "required": [
-                            "name",
-                            "uuid",
-                            "ingredients",
-                            "instructions"
-                          ]
-                        }
-                      }
-                    },
-                    "required": [
-                      "uuid",
-                      "name",
-                      "description",
-                      "images",
-                      "components"
-                    ]
+                    "$ref": "#/components/schemas/Recipe"
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }
@@ -444,7 +889,24 @@
           "kitchencalm",
           "recipes"
         ],
-        "description": "Create or update a recipe",
+        "description": "Create or update a recipe for the authenticated user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer token with JWT"
+            },
+            "required": true,
+            "description": "Bearer token with JWT",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -454,37 +916,30 @@
                 "properties": {
                   "uuid": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "description": "Recipe UUID (omit to generate new)"
                   },
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Recipe name"
                   },
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Recipe description"
                   },
                   "images": {
                     "type": "array",
                     "items": {
-                      "type": "object",
-                      "properties": {
-                        "timestamp": {
-                          "type": "number"
-                        },
-                        "key": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "timestamp",
-                        "key"
-                      ]
-                    }
+                      "$ref": "#/components/schemas/Image"
+                    },
+                    "description": "Recipe images"
                   },
                   "components": {
                     "type": "array",
                     "items": {
-                      "type": "object"
-                    }
+                      "$ref": "#/components/schemas/Component"
+                    },
+                    "description": "Recipe components"
                   }
                 },
                 "required": [
@@ -507,15 +962,237 @@
                   "properties": {
                     "uuid": {
                       "type": "string",
-                      "format": "uuid"
+                      "format": "uuid",
+                      "description": "Recipe UUID (new or provided)"
                     },
                     "success": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "description": "Whether update was successful"
                     }
                   },
                   "required": [
                     "uuid",
                     "success"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kitchencalm/recipes/search": {
+      "get": {
+        "tags": [
+          "kitchencalm",
+          "recipes"
+        ],
+        "description": "Search recipes by name, description, ingredients, or instructions",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Search query string"
+            },
+            "required": true,
+            "description": "Search query string",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "default": "name,description,ingredients,instructions",
+              "description": "Comma-separated fields to search: name,description,ingredients,instructions"
+            },
+            "required": false,
+            "description": "Comma-separated fields to search: name,description,ingredients,instructions",
+            "name": "fields",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer token with JWT"
+            },
+            "required": true,
+            "description": "Bearer token with JWT",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "uuid": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Recipe UUID"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Recipe name"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Recipe description"
+                          },
+                          "ingredients": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Flattened list of ingredient names"
+                          }
+                        },
+                        "required": [
+                          "uuid",
+                          "name",
+                          "description",
+                          "ingredients"
+                        ]
+                      },
+                      "description": "Array of matching recipes"
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Number of results returned"
+                    }
+                  },
+                  "required": [
+                    "results",
+                    "count"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
                   ]
                 }
               }
@@ -530,16 +1207,33 @@
           "kitchencalm",
           "recipes"
         ],
-        "description": "Delete a recipe",
+        "description": "Delete a recipe for the authenticated user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "description": "Recipe UUID to delete"
             },
             "required": true,
+            "description": "Recipe UUID to delete",
             "name": "uuid",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer token with JWT"
+            },
+            "required": true,
+            "description": "Bearer token with JWT",
+            "name": "authorization",
+            "in": "header"
           }
         ],
         "responses": {
@@ -551,11 +1245,13 @@
                   "type": "object",
                   "properties": {
                     "success": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "description": "Whether delete was successful"
                     },
                     "uuid": {
                       "type": "string",
-                      "format": "uuid"
+                      "format": "uuid",
+                      "description": "UUID of deleted recipe"
                     }
                   },
                   "required": [
@@ -565,84 +1261,41 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/kitchencalm/recipes/share": {
-      "post": {
-        "tags": [
-          "kitchencalm",
-          "recipes"
-        ],
-        "description": "Create a shareable link for a recipe",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "recipe": {
-                    "type": "object"
-                  }
-                },
-                "required": [
-                  "recipe"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Recipe shared successfully",
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "shareId": {
+                    "error": {
                       "type": "string",
-                      "format": "uuid"
+                      "description": "Error message"
                     }
                   },
                   "required": [
-                    "shareId"
+                    "error"
                   ]
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/kitchencalm/recipes/shared/{shareId}": {
-      "get": {
-        "tags": [
-          "kitchencalm",
-          "recipes"
-        ],
-        "description": "Get a publicly shared recipe by share ID",
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true,
-            "name": "shareId",
-            "in": "path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Shared recipe retrieved successfully",
+          },
+          "500": {
+            "description": "Internal server error",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "nullable": true
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }
@@ -657,6 +1310,23 @@
           "meal-plan"
         ],
         "description": "Get the meal plan for the authenticated user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer token with JWT"
+            },
+            "required": true,
+            "description": "Bearer token with JWT",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Meal plan retrieved successfully",
@@ -669,22 +1339,49 @@
                     "additionalProperties": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "componentId": {
-                            "type": "string"
-                          },
-                          "servings": {
-                            "type": "number"
-                          }
-                        },
-                        "required": [
-                          "componentId",
-                          "servings"
-                        ]
-                      }
+                        "$ref": "#/components/schemas/MealPlanEntry"
+                      },
+                      "description": "Array of component servings for this recipe"
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }
@@ -697,12 +1394,39 @@
           "meal-plan"
         ],
         "description": "Update the meal plan for the authenticated user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer token with JWT"
+            },
+            "required": true,
+            "description": "Bearer token with JWT",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object"
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/MealPlanEntry"
+                    },
+                    "description": "Array of component servings for this recipe"
+                  }
+                }
               }
             }
           }
@@ -716,11 +1440,69 @@
                   "type": "object",
                   "properties": {
                     "success": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "description": "Whether update was successful"
                     }
                   },
                   "required": [
                     "success"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
                   ]
                 }
               }
@@ -735,23 +1517,42 @@
           "kitchencalm",
           "shopping-list"
         ],
-        "description": "Get shopping list",
+        "description": "Get aggregated shopping list from recipes in the meal plan, optionally filtered by date range",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Filter shopping list from this date (format: DayName - DD/MM/YYYY)"
             },
             "required": false,
+            "description": "Filter shopping list from this date (format: DayName - DD/MM/YYYY)",
             "name": "startDate",
             "in": "query"
           },
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Filter shopping list until this date (format: DayName - DD/MM/YYYY)"
             },
             "required": false,
+            "description": "Filter shopping list until this date (format: DayName - DD/MM/YYYY)",
             "name": "endDate",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer token with JWT"
+            },
+            "required": true,
+            "description": "Bearer token with JWT",
+            "name": "authorization",
+            "in": "header"
           }
         ],
         "responses": {
@@ -761,6 +1562,44 @@
               "text/plain": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }
@@ -783,7 +1622,8 @@
                 "type": "object",
                 "properties": {
                   "key": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "S3 object key"
                   }
                 },
                 "required": [
@@ -803,11 +1643,50 @@
                   "properties": {
                     "signedUrl": {
                       "type": "string",
-                      "format": "uri"
+                      "format": "uri",
+                      "description": "Signed GET URL valid for download"
                     }
                   },
                   "required": [
                     "signedUrl"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
                   ]
                 }
               }
@@ -823,6 +1702,23 @@
           "s3"
         ],
         "description": "Generate a signed PUT URL for uploading files to S3",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer token with JWT"
+            },
+            "required": true,
+            "description": "Bearer token with JWT",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -831,10 +1727,12 @@
                 "type": "object",
                 "properties": {
                   "fileName": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Original filename"
                   },
                   "contentType": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "MIME type (e.g., \"image/jpeg\")"
                   }
                 },
                 "required": [
@@ -855,15 +1753,74 @@
                   "properties": {
                     "signedUrl": {
                       "type": "string",
-                      "format": "uri"
+                      "format": "uri",
+                      "description": "Signed PUT URL valid for upload"
                     },
                     "key": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "S3 object key where file will be stored"
                     }
                   },
                   "required": [
                     "signedUrl",
                     "key"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
                   ]
                 }
               }
@@ -887,7 +1844,8 @@
                 "type": "object",
                 "properties": {
                   "key": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "S3 object key to delete"
                   }
                 },
                 "required": [
@@ -906,11 +1864,377 @@
                   "type": "object",
                   "properties": {
                     "success": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "description": "Whether delete was successful"
                     }
                   },
                   "required": [
                     "success"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kitchencalm/recipes/share": {
+      "post": {
+        "tags": [
+          "kitchencalm",
+          "recipes"
+        ],
+        "description": "Create a shareable public link for a recipe",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer token with JWT"
+            },
+            "required": true,
+            "description": "Bearer token with JWT",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "recipe": {
+                    "$ref": "#/components/schemas/Recipe"
+                  }
+                },
+                "required": [
+                  "recipe"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recipe shared successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "shareId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Unique share ID for public access"
+                    }
+                  },
+                  "required": [
+                    "shareId"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing JWT token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kitchencalm/recipes/shared/:shareId": {
+      "get": {
+        "tags": [
+          "kitchencalm",
+          "recipes"
+        ],
+        "description": "Get a publicly shared recipe by share ID",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Share ID"
+            },
+            "required": true,
+            "description": "Share ID",
+            "name": "shareId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shared recipe retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true,
+                  "properties": {
+                    "uuid": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Recipe UUID"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Recipe name"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Recipe description"
+                    },
+                    "images": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "timestamp": {
+                            "type": "number",
+                            "description": "Image timestamp"
+                          },
+                          "key": {
+                            "type": "string",
+                            "description": "S3 object key"
+                          }
+                        },
+                        "required": [
+                          "timestamp",
+                          "key"
+                        ]
+                      }
+                    },
+                    "components": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "description": "Component name"
+                          },
+                          "uuid": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "Component UUID"
+                          },
+                          "ingredients": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string",
+                                  "description": "Ingredient name"
+                                },
+                                "quantity": {
+                                  "type": "object",
+                                  "properties": {
+                                    "unit": {
+                                      "type": "string",
+                                      "enum": [
+                                        "none",
+                                        "mL",
+                                        "L",
+                                        "g",
+                                        "kg",
+                                        "cup",
+                                        "tsp",
+                                        "tbsp",
+                                        "quantity"
+                                      ]
+                                    },
+                                    "value": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "unit"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "name",
+                                "quantity"
+                              ]
+                            }
+                          },
+                          "instructions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "text": {
+                                  "type": "string",
+                                  "description": "Instruction text"
+                                },
+                                "optional": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "text"
+                              ]
+                            }
+                          },
+                          "storeable": {
+                            "type": "boolean"
+                          },
+                          "servings": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "uuid",
+                          "ingredients",
+                          "instructions"
+                        ]
+                      },
+                      "description": "Recipe components"
+                    }
+                  },
+                  "required": [
+                    "uuid",
+                    "name",
+                    "description",
+                    "images",
+                    "components"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Shared recipe not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  },
+                  "required": [
+                    "error"
                   ]
                 }
               }

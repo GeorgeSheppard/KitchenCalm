@@ -61,7 +61,7 @@ export const usePutRecipeToDynamo = () => {
     mutateAsync: async (recipe: IRecipe) => {
       const context = mutate(recipe);
       try {
-        return await updateRecipe.mutateAsync(recipe as any);
+        return await updateRecipe.mutateAsync(recipe);
       } catch (error) {
         context.undo();
         throw error;

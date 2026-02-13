@@ -42,7 +42,7 @@ export const S3CardMedia = (props: IS3CardMediaProps) => {
         <Skeleton variant="rectangular" height="100%" animation="wave" className={className} />
       )}
       <CardMedia
-        src={(data as any)?.signedUrl}
+        src={data?.signedUrl}
         component="img"
         onError={() => setShow(false)}
         onLoad={() => setImageLoading(false)}

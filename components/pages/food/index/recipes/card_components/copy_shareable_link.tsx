@@ -16,7 +16,7 @@ export const CopyShareableLink = ({ recipe }: ICopyIngredientsButtonProps) => {
 
   const copyLink = async () => {
     // Pass recipe to wrapper hook which handles formatting
-    const result = await shareRecipeMutation.mutateAsync(recipe as any)
+    const result = await shareRecipeMutation.mutateAsync(recipe)
     const baseUrl = process.env.NEXT_PUBLIC_ENV_DOMAIN || process.env.ENV_DOMAIN;
     const url = new URL(`${baseUrl}/food`);
     url.searchParams.append("share", result.shareId)

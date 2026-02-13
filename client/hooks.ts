@@ -5,6 +5,7 @@
 
 import { UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
 import { AxiosError, AxiosRequestConfig } from 'axios';
+import { IRecipe } from '../core/types/recipes';
 import {
   useGetKitchencalmRecipes as useGetKitchencalmRecipesBase,
   useGetKitchencalmMealPlan as useGetKitchencalmMealPlanBase,
@@ -134,8 +135,8 @@ export const useShareRecipe = () => {
 
   return {
     ...mutation,
-    mutateAsync: async (recipe: PostKitchencalmRecipesShareBody) => {
-      const response = await mutation.mutateAsync({ data: recipe });
+    mutateAsync: async (recipe: IRecipe) => {
+      const response = await mutation.mutateAsync({ data: { recipe } });
       return response.data;
     },
   };

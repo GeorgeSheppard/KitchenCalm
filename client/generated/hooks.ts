@@ -199,20 +199,11 @@ export type GetApiQueueDueRecommendations401 = {
   error: string;
 };
 
-export type PostMcpAuthTokenBody = {
-  /** User ID as UUID */
-  userId: string;
-};
-
 export type PostMcpAuthToken200 = {
-  /** JWT token */
+  /** JWT token for MCP authentication */
   token: string;
   /** User ID */
   userId: string;
-};
-
-export type PostMcpAuthToken400 = {
-  error: string;
 };
 
 export type PostMcpAuthToken401 = {
@@ -964,34 +955,33 @@ export function useGetApiQueueDueRecommendations<
 }
 
 /**
- * Generate a JWT token for authenticated users
+ * Exchange a Cognito JWT for a long-lived MCP JWT token
  */
 export const postMcpAuthToken = (
-  postMcpAuthTokenBody: PostMcpAuthTokenBody,
   options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<PostMcpAuthToken200>> => {
   return axios.post(
     `https://api.georgesheppard.dev/mcp/auth/token`,
-    postMcpAuthTokenBody,
+    undefined,
     options,
   );
 };
 
 export const getPostMcpAuthTokenMutationOptions = <
-  TError = AxiosError<PostMcpAuthToken400 | PostMcpAuthToken401>,
+  TError = AxiosError<PostMcpAuthToken401>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof postMcpAuthToken>>,
     TError,
-    { data: PostMcpAuthTokenBody },
+    void,
     TContext
   >;
   axios?: AxiosRequestConfig;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postMcpAuthToken>>,
   TError,
-  { data: PostMcpAuthTokenBody },
+  void,
   TContext
 > => {
   const mutationKey = ["postMcpAuthToken"];
@@ -1005,11 +995,9 @@ export const getPostMcpAuthTokenMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof postMcpAuthToken>>,
-    { data: PostMcpAuthTokenBody }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return postMcpAuthToken(data, axiosOptions);
+    void
+  > = () => {
+    return postMcpAuthToken(axiosOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -1018,26 +1006,24 @@ export const getPostMcpAuthTokenMutationOptions = <
 export type PostMcpAuthTokenMutationResult = NonNullable<
   Awaited<ReturnType<typeof postMcpAuthToken>>
 >;
-export type PostMcpAuthTokenMutationBody = PostMcpAuthTokenBody;
-export type PostMcpAuthTokenMutationError = AxiosError<
-  PostMcpAuthToken400 | PostMcpAuthToken401
->;
+
+export type PostMcpAuthTokenMutationError = AxiosError<PostMcpAuthToken401>;
 
 export const usePostMcpAuthToken = <
-  TError = AxiosError<PostMcpAuthToken400 | PostMcpAuthToken401>,
+  TError = AxiosError<PostMcpAuthToken401>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof postMcpAuthToken>>,
     TError,
-    { data: PostMcpAuthTokenBody },
+    void,
     TContext
   >;
   axios?: AxiosRequestConfig;
 }): UseMutationResult<
   Awaited<ReturnType<typeof postMcpAuthToken>>,
   TError,
-  { data: PostMcpAuthTokenBody },
+  void,
   TContext
 > => {
   return useMutation(getPostMcpAuthTokenMutationOptions(options));

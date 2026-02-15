@@ -104,21 +104,17 @@ export const useGetMealPlan = (
  */
 export const useUpdateRecipe = () => {
   const { accessToken } = useAppSession();
-  const mutation = usePutKitchencalmRecipesBase();
+  const mutation = usePutKitchencalmRecipesBase({
+    axios: { headers: getAuthHeaders(accessToken) },
+  });
 
   return {
     ...mutation,
     mutate: (recipe: PutKitchencalmRecipesBody) => {
-      mutation.mutate({
-        data: recipe,
-        axios: { headers: getAuthHeaders(accessToken) },
-      });
+      mutation.mutate({ data: recipe });
     },
     mutateAsync: async (recipe: PutKitchencalmRecipesBody) => {
-      const response = await mutation.mutateAsync({
-        data: recipe,
-        axios: { headers: getAuthHeaders(accessToken) },
-      });
+      const response = await mutation.mutateAsync({ data: recipe });
       return response.data;
     },
   };
@@ -129,21 +125,17 @@ export const useUpdateRecipe = () => {
  */
 export const useUpdateMealPlan = () => {
   const { accessToken } = useAppSession();
-  const mutation = usePutKitchencalmMealPlanBase();
+  const mutation = usePutKitchencalmMealPlanBase({
+    axios: { headers: getAuthHeaders(accessToken) },
+  });
 
   return {
     ...mutation,
     mutate: (mealPlan: PutKitchencalmMealPlanBody) => {
-      mutation.mutate({
-        data: mealPlan,
-        axios: { headers: getAuthHeaders(accessToken) },
-      });
+      mutation.mutate({ data: mealPlan });
     },
     mutateAsync: async (mealPlan: PutKitchencalmMealPlanBody) => {
-      const response = await mutation.mutateAsync({
-        data: mealPlan,
-        axios: { headers: getAuthHeaders(accessToken) },
-      });
+      const response = await mutation.mutateAsync({ data: mealPlan });
       return response.data;
     },
   };
@@ -154,21 +146,17 @@ export const useUpdateMealPlan = () => {
  */
 export const useDeleteRecipe = () => {
   const { accessToken } = useAppSession();
-  const mutation = useDeleteKitchencalmRecipesUuidBase();
+  const mutation = useDeleteKitchencalmRecipesUuidBase({
+    axios: { headers: getAuthHeaders(accessToken) },
+  });
 
   return {
     ...mutation,
     mutate: (uuid: string) => {
-      mutation.mutate({
-        uuid,
-        axios: { headers: getAuthHeaders(accessToken) },
-      });
+      mutation.mutate({ uuid });
     },
     mutateAsync: async (uuid: string) => {
-      const response = await mutation.mutateAsync({
-        uuid,
-        axios: { headers: getAuthHeaders(accessToken) },
-      });
+      const response = await mutation.mutateAsync({ uuid });
       return response.data;
     },
   };
@@ -179,15 +167,14 @@ export const useDeleteRecipe = () => {
  */
 export const useShareRecipe = () => {
   const { accessToken } = useAppSession();
-  const mutation = usePostKitchencalmRecipesShareBase();
+  const mutation = usePostKitchencalmRecipesShareBase({
+    axios: { headers: getAuthHeaders(accessToken) },
+  });
 
   return {
     ...mutation,
     mutateAsync: async (recipe: IRecipe) => {
-      const response = await mutation.mutateAsync({
-        data: { recipe },
-        axios: { headers: getAuthHeaders(accessToken) },
-      });
+      const response = await mutation.mutateAsync({ data: { recipe } });
       return response.data;
     },
   };
@@ -198,15 +185,14 @@ export const useShareRecipe = () => {
  */
 export const useGetSignedUrl = () => {
   const { accessToken } = useAppSession();
-  const mutation = usePostKitchencalmS3SignedUrlBase();
+  const mutation = usePostKitchencalmS3SignedUrlBase({
+    axios: { headers: getAuthHeaders(accessToken) },
+  });
 
   return {
     ...mutation,
     mutateAsync: async (key: string) => {
-      const response = await mutation.mutateAsync({
-        data: { key },
-        axios: { headers: getAuthHeaders(accessToken) },
-      });
+      const response = await mutation.mutateAsync({ data: { key } });
       return response.data;
     },
   };
@@ -217,15 +203,14 @@ export const useGetSignedUrl = () => {
  */
 export const useGetUploadUrl = () => {
   const { accessToken } = useAppSession();
-  const mutation = usePostKitchencalmS3UploadBase();
+  const mutation = usePostKitchencalmS3UploadBase({
+    axios: { headers: getAuthHeaders(accessToken) },
+  });
 
   return {
     ...mutation,
     mutateAsync: async (params: PostKitchencalmS3UploadBody) => {
-      const response = await mutation.mutateAsync({
-        data: params,
-        axios: { headers: getAuthHeaders(accessToken) },
-      });
+      const response = await mutation.mutateAsync({ data: params });
       return response.data;
     },
   };
@@ -236,15 +221,14 @@ export const useGetUploadUrl = () => {
  */
 export const useDeleteS3Object = () => {
   const { accessToken } = useAppSession();
-  const mutation = usePostKitchencalmS3DeleteBase();
+  const mutation = usePostKitchencalmS3DeleteBase({
+    axios: { headers: getAuthHeaders(accessToken) },
+  });
 
   return {
     ...mutation,
     mutateAsync: async (key: string) => {
-      const response = await mutation.mutateAsync({
-        data: { key },
-        axios: { headers: getAuthHeaders(accessToken) },
-      });
+      const response = await mutation.mutateAsync({ data: { key } });
       return response.data;
     },
   };

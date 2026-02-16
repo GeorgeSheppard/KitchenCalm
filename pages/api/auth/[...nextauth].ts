@@ -66,7 +66,7 @@ export const authOptions: NextAuthOptions = {
       }
 
       // Refresh token if it's expired or expiring soon (within 60 seconds)
-      if (token.expiresAt && Date.now() >= token.expiresAt - 60000) {
+      if (token.expiresAt && Date.now() >= (token.expiresAt as number) - 60000) {
         return refreshAccessToken(token);
       }
 

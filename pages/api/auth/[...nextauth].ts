@@ -15,10 +15,45 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, account }) {
-      // Store the access token in the JWT
+      // Store tokens and expiration time on first login
       if (account) {
         token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token;
+        token.expiresAt = (account.expires_at ?? 0) * 1000; // Convert to milliseconds
       }
+
+      // Check if token needs refreshing (refresh if expires in less than 60 seconds)
+      if (token.expiresAt && Date.now() >= token.expiresAt - 60000) {
+        try {
+          const response = await fetch(
+            `${process.env.ENV_AWS_COGNITO_CLIENT_ISSUER}/oauth2/token`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams({
+                client_id: process.env.ENV_AWS_COGNITO_CLIENT_ID ?? "",
+                client_secret: process.env.ENV_AWS_COGNITO_CLIENT_SECRET ?? "",
+                grant_type: "refresh_token",
+                refresh_token: token.refreshToken as string,
+              }),
+            }
+          );
+
+          if (!response.ok) throw new Error("Failed to refresh token");
+
+          const refreshed = await response.json();
+          return {
+            ...token,
+            accessToken: refreshed.access_token,
+            expiresAt: (Date.now() + refreshed.expires_in * 1000),
+            refreshToken: refreshed.refresh_token ?? token.refreshToken, // Cognito may return new refresh token
+          };
+        } catch (error) {
+          console.error("Token refresh failed:", error);
+          return token;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {

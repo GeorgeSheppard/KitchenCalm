@@ -1,6 +1,5 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
-import { getFromDynamo } from "./dynamo_utilities";
 
 export const AwsDynamoClient = new DynamoDBClient({
   region: process.env.ENV_AWS_DYNAMO_REGION,
@@ -17,5 +16,3 @@ export const AwsDynamoDocClient = DynamoDBDocument.from(AwsDynamoClient, {
     removeUndefinedValues: true,
   },
 });
-
-getFromDynamo({ type: "Test" }, "Test").then(() => console.log('Dynamo test query'))

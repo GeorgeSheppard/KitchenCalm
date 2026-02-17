@@ -26,15 +26,16 @@ export const CreateShoppingListButton = memo(function MemoCreateShoppingList(
   const recipes = useRecipes();
   const mealPlan = useMealPlan();
 
-  const allSelected = selected.size === Object.keys(mealPlan.data).length;
+  const allDates = mealPlan.data.map((item) => item.date);
+  const allSelected = selected.size === allDates.length;
 
   const selectOrUnselect = useCallback(() => {
     if (allSelected) {
       setSelected(new Set());
     } else {
-      setSelected(new Set(Object.keys(mealPlan.data)));
+      setSelected(new Set(allDates));
     }
-  }, [setSelected, mealPlan, allSelected]);
+  }, [setSelected, allDates, allSelected]);
 
   return (
     <Tooltip

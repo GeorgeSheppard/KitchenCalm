@@ -83,7 +83,8 @@ export const usePutMealPlanToDynamo = () => {
     mutate: (update: IAddOrUpdatePlan) => {
       const currentMealPlan = queryClient.getQueryData(mealPlanKey) as IMealPlan | undefined
       if (!currentMealPlan) throw new Error('Cannot modify empty meal plan')
-      updateMealPlan.mutate(addOrUpdatePlan(currentMealPlan, update));
+      const updatedMealPlan = addOrUpdatePlan(currentMealPlan, update);
+      updateMealPlan.mutate(updatedMealPlan);
     },
   };
 };

@@ -47,13 +47,11 @@ export const mealPlanEmptyState: IMealPlan = createDates(
   currentDate(),
   14,
   14
-).reduce(
-  (previous, current) => ({
-    ...previous,
-    [current]: {},
-  }),
-  {}
-);
+).map((date) => ({
+  date,
+  plan: {},
+}));
+
 
 export interface IAddOrUpdatePlan {
   date: DateString;
@@ -68,42 +66,48 @@ export const addOrUpdatePlan = (
   currentPlan: IMealPlan,
   payload: IAddOrUpdatePlan
 ): IMealPlan => {
-  const mealPlan = clone(currentPlan);
+  const mealPlan = clone(currentPlan) as IMealPlan;
 
   const { date, components } = payload;
+  const dateItemIndex = mealPlan.findIndex((item) => item.date === date);
+
+  if (dateItemIndex === -1) {
+    return mealPlan;
+  }
+
+  const dateItem = mealPlan[dateItemIndex];
+
   for (const { recipeId, componentId, servingsIncrease } of components) {
-    if (mealPlan[date]) {
-      if (recipeId in mealPlan[date]) {
-        const componentIndex = mealPlan[date][recipeId].findIndex(
-          (mealPlanItem) => mealPlanItem.componentId === componentId
-        );
-        if (componentIndex > -1) {
-          const component = mealPlan[date][recipeId][componentIndex];
-          const newServings = component.servings + servingsIncrease;
-          // Note: We allow a component with zero servings, this allows the user to set that they are eating that
-          // item in the meal plan, without having to buy ingredients for it, perhaps they have a portion in the freezer
-          if (newServings >= 0) {
-            mealPlan[date][recipeId][componentIndex].servings = newServings;
-          } else {
-            mealPlan[date][recipeId].splice(componentIndex, 1);
-            if (mealPlan[date][recipeId].length === 0) {
-              delete mealPlan[date][recipeId];
-            }
-          }
+    if (recipeId in dateItem.plan) {
+      const componentIndex = dateItem.plan[recipeId].findIndex(
+        (mealPlanItem) => mealPlanItem.componentId === componentId
+      );
+      if (componentIndex > -1) {
+        const component = dateItem.plan[recipeId][componentIndex];
+        const newServings = component.servings + servingsIncrease;
+        // Note: We allow a component with zero servings, this allows the user to set that they are eating that
+        // item in the meal plan, without having to buy ingredients for it, perhaps they have a portion in the freezer
+        if (newServings >= 0) {
+          dateItem.plan[recipeId][componentIndex].servings = newServings;
         } else {
-          mealPlan[date][recipeId].push({
-            componentId,
-            servings: servingsIncrease,
-          });
+          dateItem.plan[recipeId].splice(componentIndex, 1);
+          if (dateItem.plan[recipeId].length === 0) {
+            delete dateItem.plan[recipeId];
+          }
         }
       } else {
-        mealPlan[date][recipeId] = [
-          {
-            componentId,
-            servings: servingsIncrease,
-          },
-        ];
+        dateItem.plan[recipeId].push({
+          componentId,
+          servings: servingsIncrease,
+        });
       }
+    } else {
+      dateItem.plan[recipeId] = [
+        {
+          componentId,
+          servings: servingsIncrease,
+        },
+      ];
     }
   }
 

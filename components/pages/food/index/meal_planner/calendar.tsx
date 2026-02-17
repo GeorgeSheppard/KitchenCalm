@@ -28,7 +28,7 @@ export const Planner = memo(function MemoPlanner(props: ICalendarRowProps) {
         const newSelection = new Set(prevSelected);
         if (event.shiftKey) {
           event.preventDefault();
-          const dates = Object.keys(mealPlan.data);
+          const dates = mealPlan.data.map((item) => item.date);
           if (lastSelected) {
             const start = dates.indexOf(lastSelected);
             if (lastSelected !== day) {
@@ -64,16 +64,16 @@ export const Planner = memo(function MemoPlanner(props: ICalendarRowProps) {
       marginBottom={1}
       px={0}
     >
-      {Object.entries(mealPlan.data).map(([day]) => {
+      {mealPlan.data.map(({ date }) => {
         return (
           <Grid
             item
             columns={1}
-            key={day}
+            key={date}
           >
             <DroppableCard
-              day={day}
-              selected={selected.has(day)}
+              day={date}
+              selected={selected.has(date)}
               setSelected={setSelected}
               onClick={onClick}
               loading={mealPlan.isFetching}

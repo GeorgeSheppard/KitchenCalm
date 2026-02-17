@@ -7,9 +7,12 @@ import { UserId } from "../../../core/types/utilities";
 const mealPlanWithUpdatedDates = (mealPlan: IMealPlan): IMealPlan => {
   let newDatesMealPlan = clone(mealPlanEmptyState);
 
-  for (const [date, plan] of Object.entries(mealPlan)) {
-    if (date in newDatesMealPlan) {
-      newDatesMealPlan[date] = plan;
+  for (const mealPlanItem of mealPlan) {
+    const dateItemIndex = newDatesMealPlan.findIndex(
+      (item) => item.date === mealPlanItem.date
+    );
+    if (dateItemIndex !== -1) {
+      newDatesMealPlan[dateItemIndex].plan = mealPlanItem.plan;
     }
   }
   return newDatesMealPlan;

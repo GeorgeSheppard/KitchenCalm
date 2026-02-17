@@ -24,9 +24,8 @@ const useDeleteRecipeInCache = () => {
 
     if (previousMealPlan) {
       const updatedMealPlan = clone(previousMealPlan);
-      for (const date of Object.keys(updatedMealPlan)) {
-        const dailyPlan = updatedMealPlan[date];
-        delete dailyPlan[recipeId];
+      for (const mealPlanItem of updatedMealPlan) {
+        delete mealPlanItem.plan[recipeId];
       }
       queryClient.setQueryData(mealPlanKey, updatedMealPlan);
     }

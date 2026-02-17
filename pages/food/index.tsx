@@ -12,12 +12,10 @@ import {
 import { DateString } from "../../core/types/meal_plan";
 import { ParsedUrlQuery } from "querystring";
 import { useSearchDebounce } from "../../core/hooks/use_search_debounce";
-import { SharedRecipeId } from "../../core/dynamo/dynamo_utilities";
 import { IRecipe } from "../../core/types/recipes";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
-import { appRouter } from '../../server/index';
-import { CustomSession, authOptions } from "../api/auth/[...nextauth]";
-import { getServerSession } from "next-auth";
+
+type SharedRecipeId = string;
 
 const allSearchValues = new Set<SearchableAttributes>([
   "name",
@@ -25,7 +23,7 @@ const allSearchValues = new Set<SearchableAttributes>([
   "ingredients",
 ]);
 
-const getSharedRecipe = (query: ParsedUrlQuery): SharedRecipeId | undefined => {
+const getSharedRecipeIdFromQuery = (query: ParsedUrlQuery): SharedRecipeId | undefined => {
   const { share } = query;
   if (share instanceof Array) return;
   if (!share) return;
@@ -37,23 +35,26 @@ type Props = { sharedRecipe: IRecipe | null };
 export const getServerSideProps = async (
   context: GetServerSidePropsContext
 ): Promise<GetServerSidePropsResult<Props>> => {
-  const session: CustomSession | null = await getServerSession(
-    context.req,
-    context.res,
-    authOptions
-  );
-
   const { query } = context;
 
-  const sharedRecipe = getSharedRecipe(query);
-  if (!sharedRecipe) return { props: { sharedRecipe: null } };
+  const sharedRecipeId = getSharedRecipeIdFromQuery(query);
+  if (!sharedRecipeId) return { props: { sharedRecipe: null } };
 
-  const caller = appRouter.createCaller({ session });
-  const recipe = await caller.recipes.getSharedRecipe({ share: sharedRecipe });
-
-  return {
-    props: { sharedRecipe: recipe },
-  };
+  try {
+    const response = await fetch(
+      `https://api.georgesheppard.dev/kitchencalm/recipes/shared/${sharedRecipeId}`
+    );
+    if (!response.ok) {
+      return { props: { sharedRecipe: null } };
+    }
+    const recipe = await response.json();
+    return {
+      props: { sharedRecipe: recipe },
+    };
+  } catch (error) {
+    console.error('Error fetching shared recipe:', error);
+    return { props: { sharedRecipe: null } };
+  }
 };
 
 const Recipes = (props: Props) => {

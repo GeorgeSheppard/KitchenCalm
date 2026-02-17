@@ -1,36 +1,22 @@
 import Button from "@mui/material/Button";
-import Chip from "@mui/material/Chip";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import Tooltip from "@mui/material/Tooltip";
-import { useMemo, useState } from "react";
 import { useIsMobileLayout } from "../../../../hooks/is_mobile_layout";
-import {
-  createShoppingList,
-  IQuantitiesAndMeals,
-} from "../../../../../core/meal_plan/shopping_list_creator";
 
 interface IShoppingListDialogProps {
-  quantityAndMeals: IQuantitiesAndMeals;
+  shoppingList: string;
   on: boolean;
   turnOff: () => void;
 }
 
 export const ShoppingListDialog = (props: IShoppingListDialogProps) => {
-  const { quantityAndMeals, on, turnOff } = props;
+  const { shoppingList, on, turnOff } = props;
 
   const mobileLayout = useIsMobileLayout();
-  const [options, setOptions] = useState({
-    includeMeals: true,
-    categorise: true,
-  });
-
-  const shoppingList = useMemo(() => {
-    return createShoppingList(quantityAndMeals, options);
-  }, [quantityAndMeals, options]);
 
   return (
     <Dialog open={on} onClose={turnOff} fullScreen={mobileLayout}>
@@ -38,36 +24,10 @@ export const ShoppingListDialog = (props: IShoppingListDialogProps) => {
         Shopping list
       </DialogTitle>
       <DialogContent>
-        <div className="flex gap-1 justify-start">
-          <Chip
-            label={"Include meals"}
-            size="small"
-            variant={options.includeMeals ? "filled" : "outlined"}
-            color={options.includeMeals ? "primary" : "default"}
-            onClick={() =>
-              setOptions((prevOptions) => ({
-                ...prevOptions,
-                includeMeals: !prevOptions.includeMeals,
-              }))
-            }
-          />
-          <Chip
-            label={"Categorise"}
-            size="small"
-            variant={options.categorise ? "filled" : "outlined"}
-            color={options.categorise ? "primary" : "default"}
-            onClick={() =>
-              setOptions((prevOptions) => ({
-                ...prevOptions,
-                categorise: !prevOptions.categorise,
-              }))
-            }
-          />
-        </div>
         <DialogContentText sx={{ whiteSpace: "pre-wrap", marginTop: "24px" }}>
           {shoppingList.length > 0
             ? shoppingList
-            : "No shopping list, there are either no selected dates or zero servings."}
+            : "No shopping list available."}
         </DialogContentText>
       </DialogContent>
       <DialogActions>

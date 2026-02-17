@@ -6,7 +6,6 @@ import Tabs from "@mui/material/Tabs";
 import { UseQueryResult } from "@tanstack/react-query";
 import { Dispatch, SetStateAction, useState } from "react";
 import { IUseBoolean } from "../../../../core/hooks/use_boolean";
-import { IQuantitiesAndMeals } from "../../../../core/meal_plan/shopping_list_creator";
 import { DateString } from "../../../../core/types/meal_plan";
 import { IRecipe, RecipeUuid } from "../../../../core/types/recipes";
 import { Planner } from "./meal_planner/calendar";
@@ -20,8 +19,8 @@ export interface MobileStateProps {
   selected: Set<DateString>;
   setSelected: Dispatch<SetStateAction<Set<DateString>>>;
   booleanState: IUseBoolean;
-  shoppingListData: IQuantitiesAndMeals;
-  setShoppingListData: Dispatch<SetStateAction<IQuantitiesAndMeals>>;
+  shoppingListData: string;
+  setShoppingListData: Dispatch<SetStateAction<string>>;
   sharedRecipe: IRecipe | null;
   searchString: string;
   setSearchString: (value: string) => void;
@@ -56,7 +55,7 @@ export const MobileLayout = (props: MobileStateProps) => {
         maxWidth="xl"
       >
         <ShoppingListDialog
-          quantityAndMeals={shoppingListData}
+          shoppingList={shoppingListData}
           on={on}
           turnOff={turnOff}
         />

@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useIsMobileLayout } from "../../components/hooks/is_mobile_layout";
 import { DesktopLayout } from "../../components/pages/food/index/desktop_layout";
 import { MobileLayout } from "../../components/pages/food/index/mobile_layout";
-import { IQuantitiesAndMeals } from "../../core/meal_plan/shopping_list_creator";
 import { useRecipeIds } from "../../core/dynamo/hooks/use_dynamo_get";
 import { useBoolean } from "../../core/hooks/use_boolean";
 import {
@@ -69,9 +68,7 @@ const Recipes = (props: Props) => {
   const recipeIds = useRecipeIds();
   const [selected, setSelected] = useState<Set<DateString>>(() => new Set());
   const booleanState = useBoolean(false);
-  const [shoppingListData, setShoppingListData] = useState<IQuantitiesAndMeals>(
-    {}
-  );
+  const [shoppingListData, setShoppingListData] = useState<string>("");
 
   // NoSsr because of media query used to determine mobile layout or not
   return (

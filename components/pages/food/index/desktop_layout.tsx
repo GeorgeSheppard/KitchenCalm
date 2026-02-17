@@ -34,7 +34,7 @@ export const DesktopLayout = (
   return (
     <main>
       <ShoppingListDialog
-        quantityAndMeals={shoppingListData}
+        shoppingList={shoppingListData}
         on={on}
         turnOff={turnOff}
       />

@@ -58,13 +58,13 @@ The project uses [Orval](https://orval.dev/) to auto-generate API client code fr
 
 ### Fetching the Latest Schema
 
-The backend schema is published at the public API. Fetch the latest OpenAPI schema from the backend:
+The backend schema is published in the API repository. Fetch the latest OpenAPI schema:
 
 ```bash
-curl -o openapi.json https://api.georgesheppard.dev/openapi.json
+curl -o openapi.json https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/generated/openapi/georgesheppard-spec.json
 ```
 
-This downloads the latest schema from the public API endpoint and saves it to `openapi.json` in the project root.
+This downloads the latest schema from the GitHub repository and saves it to `openapi.json` in the project root.
 
 ### Generating API Hooks
 
@@ -85,7 +85,7 @@ This runs Orval with the configuration in `orval.config.ts` and generates:
 To update the backend schema and regenerate API code:
 
 ```bash
-curl -o openapi.json https://api.georgesheppard.dev/openapi.json && yarn generate:api
+curl -o openapi.json https://raw.githubusercontent.com/GeorgeSheppard/api.georgesheppard.dev/master/generated/openapi/georgesheppard-spec.json && yarn generate:api
 ```
 
 After updating the schema, review the generated code changes and run your tests to ensure compatibility:

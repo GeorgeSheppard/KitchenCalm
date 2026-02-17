@@ -2,6 +2,7 @@ import { IRecipe, IRecipes } from "../../../core/types/recipes";
 import {
   IAddOrUpdatePlan,
   addOrUpdatePlan,
+  internalMealPlanToApi,
 } from "../../meal_plan/meal_plan_utilities";
 import { IMealPlan } from "../../types/meal_plan";
 import { useAppSession } from "../../hooks/use_app_session";
@@ -83,7 +84,8 @@ export const usePutMealPlanToDynamo = () => {
     mutate: (update: IAddOrUpdatePlan) => {
       const currentMealPlan = queryClient.getQueryData(mealPlanKey) as IMealPlan | undefined
       if (!currentMealPlan) throw new Error('Cannot modify empty meal plan')
-      updateMealPlan.mutate(addOrUpdatePlan(currentMealPlan, update));
+      const updatedMealPlan = addOrUpdatePlan(currentMealPlan, update);
+      updateMealPlan.mutate(internalMealPlanToApi(updatedMealPlan));
     },
   };
 };

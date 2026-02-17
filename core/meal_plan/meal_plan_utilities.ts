@@ -55,6 +55,30 @@ export const mealPlanEmptyState: IMealPlan = createDates(
   {}
 );
 
+/**
+ * Convert from API array format to internal IMealPlan object format
+ */
+export const apiMealPlanToInternal = (
+  apiMealPlan: Array<{ date: string; plan: { [key: string]: any[] } }>
+): IMealPlan => {
+  return apiMealPlan.reduce((acc, item) => {
+    acc[item.date] = item.plan;
+    return acc;
+  }, {} as IMealPlan);
+};
+
+/**
+ * Convert from internal IMealPlan object format to API array format
+ */
+export const internalMealPlanToApi = (
+  internalMealPlan: IMealPlan
+): Array<{ date: string; plan: { [key: string]: any[] } }> => {
+  return Object.entries(internalMealPlan).map(([date, plan]) => ({
+    date,
+    plan,
+  }));
+};
+
 export interface IAddOrUpdatePlan {
   date: DateString;
   components: {

@@ -12,10 +12,10 @@ import {
 import { DateString } from "../../core/types/meal_plan";
 import { ParsedUrlQuery } from "querystring";
 import { useSearchDebounce } from "../../core/hooks/use_search_debounce";
-import { SharedRecipeId } from "../../core/dynamo/dynamo_utilities";
 import { IRecipe } from "../../core/types/recipes";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
-import { getSharedRecipe } from '../../server/routers/recipes/queries';
+
+type SharedRecipeId = string;
 
 const allSearchValues = new Set<SearchableAttributes>([
   "name",
@@ -40,11 +40,21 @@ export const getServerSideProps = async (
   const sharedRecipeId = getSharedRecipeIdFromQuery(query);
   if (!sharedRecipeId) return { props: { sharedRecipe: null } };
 
-  const recipe = await getSharedRecipe({ id: sharedRecipeId });
-
-  return {
-    props: { sharedRecipe: recipe },
-  };
+  try {
+    const response = await fetch(
+      `https://api.georgesheppard.dev/kitchencalm/recipes/shared/${sharedRecipeId}`
+    );
+    if (!response.ok) {
+      return { props: { sharedRecipe: null } };
+    }
+    const recipe = await response.json();
+    return {
+      props: { sharedRecipe: recipe },
+    };
+  } catch (error) {
+    console.error('Error fetching shared recipe:', error);
+    return { props: { sharedRecipe: null } };
+  }
 };
 
 const Recipes = (props: Props) => {

@@ -21,7 +21,7 @@ import {
   getGetKitchencalmRecipesQueryKey,
   getGetKitchencalmMealPlanQueryKey,
   PutKitchencalmRecipesBody,
-  PutKitchencalmMealPlanBody,
+  PutKitchencalmMealPlanBodyItem,
   PostKitchencalmRecipesShareBody,
   PostKitchencalmS3SignedUrlBody,
   PostKitchencalmS3UploadBody,
@@ -131,10 +131,10 @@ export const useUpdateMealPlan = () => {
 
   return {
     ...mutation,
-    mutate: (mealPlan: PutKitchencalmMealPlanBody) => {
+    mutate: (mealPlan: PutKitchencalmMealPlanBodyItem[]) => {
       mutation.mutate({ data: mealPlan });
     },
-    mutateAsync: async (mealPlan: PutKitchencalmMealPlanBody) => {
+    mutateAsync: async (mealPlan: PutKitchencalmMealPlanBodyItem[]) => {
       const response = await mutation.mutateAsync({ data: mealPlan });
       return response.data;
     },

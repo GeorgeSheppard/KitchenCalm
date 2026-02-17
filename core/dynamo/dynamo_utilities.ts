@@ -54,10 +54,14 @@ export const uploadToDynamo = async (
   item: Item,
   userId: RealUserId | SharedRecipeId
 ) => {
+  const itemToStore = item.type === "MP"
+    ? { mealPlan: item.item }
+    : item.item;
+
   return await AwsDynamoDocClient.put({
     TableName: process.env.ENV_AWS_DYNAMO_NAME,
     Item: {
-      ...item.item,
+      ...itemToStore,
       UserId: userId,
       Item: getSortKey(item),
     },
@@ -151,8 +155,8 @@ export const getMealPlanForAUser = async (
 ): Promise<IMealPlan> => {
   try {
     const result = await getFromDynamo({ type: "MP" }, userId);
-    const { Item, UserId, ...obj } = result.Item!;
-    return obj;
+    const { Item, UserId, mealPlan } = result.Item!;
+    return mealPlan || mealPlanEmptyState;
   } catch (err) {
     if (err instanceof NotFoundError) {
       return mealPlanEmptyState;

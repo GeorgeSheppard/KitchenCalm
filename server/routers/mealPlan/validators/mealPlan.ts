@@ -6,6 +6,9 @@ const mealPlanComponentValidator: z.ZodType<IComponentItem> = z.object({
   servings: z.number(),
 });
 
-export const mealPlanValidator: z.ZodType<IMealPlan> = z.record(
-  z.record(mealPlanComponentValidator.array())
-);
+const mealPlanItemValidator = z.object({
+  date: z.string(),
+  plan: z.record(mealPlanComponentValidator.array()),
+});
+
+export const mealPlanValidator: z.ZodType<IMealPlan> = mealPlanItemValidator.array();

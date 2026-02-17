@@ -31,7 +31,9 @@ export const DroppableCard = (props: {
   loading: boolean;
 }) => {
   const { day, selected, onClick, setSelected, loading } = props;
-  const meals = useMealPlan().data[day];
+  const mealPlan = useMealPlan();
+  const mealPlanItem = mealPlan.data.find((item) => item.date === day);
+  const meals = mealPlanItem?.plan;
   const recipeIds = useRecipeIds().data;
   const { mutate } = usePutMealPlanToDynamo();
   const [dialogOpen, setters] = useBoolean(false);

@@ -1,5 +1,5 @@
 import { Quantities } from "../recipes/units";
-import { DateString, IDailyMealPlan } from "../types/meal_plan";
+import { DateString, IDailyMealPlan, IMealPlan } from "../types/meal_plan";
 import { IIngredientName, IQuantity, IRecipe, Unit } from "../types/recipes";
 import foodGroups from "./combinedGroups.json";
 import groupDescriptions from "./groupDescriptions.json";
@@ -13,17 +13,18 @@ export interface IQuantitiesAndMeals {
 
 export function createShoppingListData(
   recipes: IRecipe[],
-  mealPlan: { [index: DateString]: IDailyMealPlan },
+  mealPlan: IMealPlan,
   selectedDays: Set<DateString>
 ): IQuantitiesAndMeals {
   const quantityAndMeals: IQuantitiesAndMeals = {};
 
-  for (const date of Object.keys(mealPlan)) {
+  for (const mealPlanItem of mealPlan) {
+    const date = mealPlanItem.date;
     if (!selectedDays.has(date)) {
       continue;
     }
 
-    const dayMealPlan = mealPlan[date];
+    const dayMealPlan = mealPlanItem.plan;
     for (const [recipeId, components] of Object.entries(dayMealPlan)) {
       const recipe = recipes.find((rec) => rec.uuid === recipeId);
       if (!recipe) {

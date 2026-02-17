@@ -2,7 +2,12 @@ import { ComponentUuid, RecipeUuid } from "./recipes";
 
 export type DateString = string;
 
-export type IMealPlan = { [index: DateString]: IDailyMealPlan }
+export interface IMealPlanItem {
+  date: DateString;
+  plan: IDailyMealPlan;
+}
+
+export type IMealPlan = IMealPlanItem[];
 
 export interface IDailyMealPlan {
   [index: RecipeUuid]: IComponentItem[];

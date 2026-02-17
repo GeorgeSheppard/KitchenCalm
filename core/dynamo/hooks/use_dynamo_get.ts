@@ -1,4 +1,4 @@
-import { mealPlanEmptyState, apiMealPlanToInternal } from "../../meal_plan/meal_plan_utilities";
+import { mealPlanEmptyState } from "../../meal_plan/meal_plan_utilities";
 import { IRecipe, IRecipes, RecipeUuid } from "../../types/recipes";
 import { NewRecipe } from "../../../pages/food/[recipeUuid]";
 import { useAppSession } from "../../hooks/use_app_session";
@@ -56,7 +56,6 @@ export const useMealPlan = () => {
   const mealPlan = useGetKitchencalmMealPlan({
     query: {
       enabled: !loading,
-      select: (data) => apiMealPlanToInternal(data || []),
       placeholderData: mealPlanEmptyState,
     },
   });

@@ -57,7 +57,14 @@ export const useGetRecipes = (
   const query = useGetKitchencalmRecipesBase({
     query: {
       ...options?.query,
-      select: (response: any) => response.data,
+      select: (response: any) => {
+        // Extract data from AxiosResponse
+        // response is AxiosResponse which has { data, status, statusText, ... }
+        if (response && typeof response === 'object' && 'data' in response) {
+          return response.data;
+        }
+        return response;
+      },
     },
     axios: {
       ...options?.axios,
@@ -85,7 +92,14 @@ export const useGetMealPlan = (
   const query = useGetKitchencalmMealPlanBase({
     query: {
       ...options?.query,
-      select: (response: any) => response.data,
+      select: (response: any) => {
+        // Extract data from AxiosResponse
+        // response is AxiosResponse which has { data, status, statusText, ... }
+        if (response && typeof response === 'object' && 'data' in response) {
+          return response.data;
+        }
+        return response;
+      },
     },
     axios: {
       ...options?.axios,

@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { v4 as uuidv4 } from "uuid";
 import { useRecipe } from "../../core/dynamo/hooks/use_dynamo_get";
 import { RecipeUuid } from "../../core/types/recipes";
-import { FormWithData } from "../../components/pages/food/[recipeUuid]/form_with_data";
+import { TextInputWithData } from "../../components/pages/food/[recipeUuid]/text_input_with_data";
 
 export const NewRecipe = "newRecipe";
 
@@ -32,7 +32,7 @@ export default function RecipeForm() {
     return <LinearProgress />;
   }
   if (uuid === NewRecipe) {
-    return <FormWithData recipe={getDefaultRecipe(uuidv4())} />;
+    return <TextInputWithData recipe={getDefaultRecipe(uuidv4())} />;
   }
   if (recipe.isError) {
     console.error("Error: ", recipe.error);
@@ -50,5 +50,5 @@ export default function RecipeForm() {
     return;
   }
 
-  return <FormWithData recipe={recipe.data} />;
+  return <TextInputWithData recipe={recipe.data} />;
 }

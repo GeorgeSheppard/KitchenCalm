@@ -248,10 +248,8 @@ export const useParseRecipe = () => {
 
   return {
     ...mutation,
-    mutateAsync: async (params: PostKitchencalmParseRecipeBody | string) => {
-      // Support both legacy string parameter and new object with recipeId
-      const data = typeof params === 'string' ? { recipeText: params } : params;
-      const response = await mutation.mutateAsync({ data });
+    mutateAsync: async (params: PostKitchencalmParseRecipeBody) => {
+      const response = await mutation.mutateAsync({ data: params });
       return response.data;
     },
   };

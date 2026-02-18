@@ -65,6 +65,12 @@ export const recipeToString = (recipe: IRecipe): string => {
 };
 
 export const isNewRecipe = (recipe: IRecipe): boolean => {
-  // A recipe is considered new if it has no name and no components
-  return !recipe.name && (!recipe.components || recipe.components.length === 0);
+  if (recipe.name) return false;
+  if (!recipe.components || recipe.components.length === 0) return true;
+  return recipe.components.every(
+    (c) =>
+      !c.name &&
+      (!c.ingredients || c.ingredients.length === 0) &&
+      (!c.instructions || c.instructions.length === 0),
+  );
 };

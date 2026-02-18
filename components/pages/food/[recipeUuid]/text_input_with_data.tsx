@@ -1,15 +1,26 @@
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Card from "@mui/material/Card";
 import Container from "@mui/material/Container";
 import TextField from "@mui/material/TextField";
 import { ExitSaveButtons } from "../../../core/exit_save_buttons";
 import { IRecipe } from "../../../../core/types/recipes";
+import {
+  recipeToString,
+  isNewRecipe,
+} from "../../../../core/utils/recipe_formatter";
 
 export const TextInputWithData = ({ recipe }: { recipe: IRecipe }) => {
   const router = useRouter();
-  const [recipeText, setRecipeText] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Convert recipe to string format, or start empty if new recipe
+  const initialText = useMemo(() => {
+    const isNew = isNewRecipe(recipe);
+    return isNew ? "" : recipeToString(recipe);
+  }, [recipe]);
+
+  const [recipeText, setRecipeText] = useState(initialText);
 
   const onSubmit = async () => {
     setLoading(true);

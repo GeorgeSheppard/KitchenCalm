@@ -18,6 +18,7 @@ import {
   usePostKitchencalmS3SignedUrl as usePostKitchencalmS3SignedUrlBase,
   usePostKitchencalmS3Upload as usePostKitchencalmS3UploadBase,
   usePostKitchencalmS3Delete as usePostKitchencalmS3DeleteBase,
+  usePostKitchencalmParseRecipe as usePostKitchencalmParseRecipeBase,
   getGetKitchencalmRecipesQueryKey,
   getGetKitchencalmMealPlanQueryKey,
   PutKitchencalmRecipesBody,
@@ -26,6 +27,7 @@ import {
   PostKitchencalmS3SignedUrlBody,
   PostKitchencalmS3UploadBody,
   PostKitchencalmS3DeleteBody,
+  PostKitchencalmParseRecipeBody,
   PutKitchencalmRecipes200,
   PutKitchencalmMealPlan200,
   DeleteKitchencalmRecipesUuid200,
@@ -229,6 +231,25 @@ export const useDeleteS3Object = () => {
     ...mutation,
     mutateAsync: async (key: string) => {
       const response = await mutation.mutateAsync({ data: { key } });
+      return response.data;
+    },
+  };
+};
+
+/**
+ * Parse recipe from natural language text - simplified interface
+ * Supports both creating new recipes and editing existing ones (via recipeId)
+ */
+export const useParseRecipe = () => {
+  const { accessToken } = useAppSession();
+  const mutation = usePostKitchencalmParseRecipeBase({
+    axios: { headers: getAuthHeaders(accessToken) },
+  });
+
+  return {
+    ...mutation,
+    mutateAsync: async (params: PostKitchencalmParseRecipeBody) => {
+      const response = await mutation.mutateAsync({ data: params });
       return response.data;
     },
   };

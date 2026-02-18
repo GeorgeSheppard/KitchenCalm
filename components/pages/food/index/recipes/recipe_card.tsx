@@ -1,4 +1,4 @@
-import { Divider } from "@mui/material";
+import { Separator } from "@/components/ui/separator";
 import { useRecipe } from "../../../../../core/dynamo/hooks/use_dynamo_get";
 import { IRecipe, RecipeUuid } from "../../../../../core/types/recipes";
 import { WrappedCardMedia } from "../../../../core/cards/wrapped_card_media";
@@ -125,7 +125,7 @@ export const RecipeCard = memo(function MemoRecipeCardContent(
             </RecipeBody>
             {recipe.description?.length > 0 && (
               <DescriptionContainer>
-                <Divider />
+                <Separator />
                 <Description>{recipe.description}</Description>
               </DescriptionContainer>
             )}

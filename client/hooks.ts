@@ -238,6 +238,7 @@ export const useDeleteS3Object = () => {
 
 /**
  * Parse recipe from natural language text - simplified interface
+ * Supports both creating new recipes and editing existing ones (via recipeId)
  */
 export const useParseRecipe = () => {
   const { accessToken } = useAppSession();
@@ -247,8 +248,10 @@ export const useParseRecipe = () => {
 
   return {
     ...mutation,
-    mutateAsync: async (recipeText: string) => {
-      const response = await mutation.mutateAsync({ data: { recipeText } });
+    mutateAsync: async (params: PostKitchencalmParseRecipeBody | string) => {
+      // Support both legacy string parameter and new object with recipeId
+      const data = typeof params === 'string' ? { recipeText: params } : params;
+      const response = await mutation.mutateAsync({ data });
       return response.data;
     },
   };

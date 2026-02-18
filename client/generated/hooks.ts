@@ -33,6 +33,8 @@ export type PostKitchencalmParseRecipe400 = {
 };
 
 export type PostKitchencalmParseRecipeBody = {
+  /** Recipe UUID for editing existing recipes */
+  recipeId?: string;
   /**
    * Natural language recipe text to parse
    * @minLength 1

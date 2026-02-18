@@ -9,10 +9,12 @@ import {
   recipeToString,
   isNewRecipe,
 } from "../../../../core/utils/recipe_formatter";
+import { useParsedRecipeToDynamo } from "../../../../core/dynamo/hooks/use_parse_recipe";
 
 export const TextInputWithData = ({ recipe }: { recipe: IRecipe }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { mutateAsync } = useParsedRecipeToDynamo();
 
   // Convert recipe to string format, or start empty if new recipe
   const initialText = useMemo(() => {
@@ -25,9 +27,9 @@ export const TextInputWithData = ({ recipe }: { recipe: IRecipe }) => {
   const onSubmit = async () => {
     setLoading(true);
     try {
-      // TODO: Call backend endpoint to convert text to recipe format
-      // await convertTextToRecipe(recipeText);
-      // router.push("/food");
+      const recipeId = isNewRecipe(recipe) ? undefined : recipe.uuid;
+      await mutateAsync(recipeText, recipeId);
+      router.push("/food");
     } catch (error) {
       console.error("Error submitting recipe:", error);
     } finally {

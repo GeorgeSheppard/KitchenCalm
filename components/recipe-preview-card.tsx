@@ -40,16 +40,21 @@ export function RecipePreviewCard({ recipe }: { recipe: Recipe }) {
         <div className="flex flex-1 flex-col justify-between gap-3 p-5">
           <div className="flex flex-col gap-2">
             {recipe.tags.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5">
-                {recipe.tags.map((tag) => (
+              <div className="flex items-center gap-1.5">
+                {recipe.tags.slice(0, 2).map((tag) => (
                   <Badge
                     key={tag}
                     variant="secondary"
-                    className="text-[11px] font-medium px-2 py-0"
+                    className="text-[11px] font-medium px-2 py-0 shrink-0"
                   >
                     {tag}
                   </Badge>
                 ))}
+                {recipe.tags.length > 2 && (
+                  <span className="text-[11px] text-muted-foreground">
+                    +{recipe.tags.length - 2}
+                  </span>
+                )}
               </div>
             )}
 

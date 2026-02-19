@@ -53,7 +53,7 @@ export function RecipeHeader({ recipe }: { recipe: Recipe }) {
           </p>
         )}
         {hasMetadata && (
-          <div className="grid grid-cols-2 gap-3 pt-2 sm:grid-cols-3 md:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 pt-2">
             {recipe.prepTime && (
               <MetaItem icon={<Clock className="size-4" />} label="Prep" value={recipe.prepTime} />
             )}

@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { SearchBar } from "../../components/search-bar";
 import { RecipeGrid } from "../../components/recipe-grid";
-import { ConnectedMealPlanner } from "../../components/connected-meal-planner";
 import { SharedRecipeBanner } from "../../components/shared-recipe-banner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   SearchableAttributes,
   useRecipeSearch,
@@ -71,50 +69,14 @@ const Recipes = (props: Props) => {
         </div>
       )}
 
-      {/* Mobile: Tabs */}
-      <div className="lg:hidden">
-        <Tabs defaultValue="recipes">
-          <TabsList className="mb-4 w-full">
-            <TabsTrigger value="recipes" className="flex-1">
-              Recipes
-            </TabsTrigger>
-            <TabsTrigger value="mealplan" className="flex-1">
-              Meal Plan
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="recipes">
-            <div className="flex flex-col gap-4">
-              <SearchBar
-                searchString={searchString}
-                onSearchChange={setSearchString}
-              />
-              <RecipeGrid recipeIds={searchResults} />
-            </div>
-          </TabsContent>
-          <TabsContent value="mealplan">
-            <ConnectedMealPlanner />
-          </TabsContent>
-        </Tabs>
-      </div>
-
-      {/* Desktop: Side-by-side */}
-      <div className="hidden lg:flex lg:gap-6">
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-col gap-4">
-            <SearchBar
-              searchString={searchString}
-              onSearchChange={setSearchString}
-              keys={keys}
-              onKeysChange={setKeys}
-            />
-            <RecipeGrid recipeIds={searchResults} />
-          </div>
-        </div>
-        <aside className="w-[420px] shrink-0">
-          <div className="sticky top-6">
-            <ConnectedMealPlanner />
-          </div>
-        </aside>
+      <div className="flex flex-col gap-4">
+        <SearchBar
+          searchString={searchString}
+          onSearchChange={setSearchString}
+          keys={keys}
+          onKeysChange={setKeys}
+        />
+        <RecipeGrid recipeIds={searchResults} />
       </div>
     </main>
   );

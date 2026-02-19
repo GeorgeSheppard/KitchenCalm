@@ -78,7 +78,7 @@ function IngredientsList({
                 aria-pressed={isChecked}
               >
                 <span
-                  className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border transition-colors ${
+                  className={`flex size-5 shrink-0 items-center justify-center rounded border transition-colors ${
                     isChecked
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-card"
@@ -140,13 +140,16 @@ function InstructionsList({
                 aria-pressed={isDone}
               >
                 <span
-                  className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
+                  className={`relative flex w-6 h-6 shrink-0 grow-0 items-center justify-center rounded-full text-xs font-semibold leading-none transition-colors ${
                     isDone
                       ? "bg-primary text-primary-foreground"
                       : "bg-accent text-accent-foreground group-hover:bg-primary/20"
                   }`}
                 >
-                  {isDone ? <Check className="size-3.5" /> : i + 1}
+                  <span className={`transition-opacity ${isDone ? "opacity-0" : "opacity-100"}`}>
+                    {i + 1}
+                  </span>
+                  <Check className={`size-3.5 absolute transition-opacity ${isDone ? "opacity-100" : "opacity-0"}`} />
                 </span>
                 <p
                   className={`text-sm leading-relaxed transition-colors ${

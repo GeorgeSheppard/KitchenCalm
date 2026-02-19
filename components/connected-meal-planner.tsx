@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   startOfWeek,
   addWeeks,
@@ -16,7 +16,9 @@ import { mealPlanToPlannedMeals } from "@/lib/adapters/meal-plan-adapter";
 import { isoToDateString } from "@/lib/adapters/date-adapter";
 import { useGetSignedUrl } from "../client/hooks";
 import type { Recipe } from "@/lib/recipe-data";
+import { allRecipes } from "@/lib/recipe-data";
 import type { MealType } from "@/lib/meal-planner-data";
+import { testPlannedMeals } from "@/lib/test-data";
 import { RecipeUuid, IRecipe } from "../core/types/recipes";
 import { WeekNavigation } from "./meal-planner/week-navigation";
 import { CalendarGrid } from "./meal-planner/calendar-grid";
@@ -26,6 +28,9 @@ import { ShoppingListDialog } from "./shopping-list-dialog";
 export function ConnectedMealPlanner() {
   const [weekStart, setWeekStart] = useState(() =>
     startOfWeek(new Date(), { weekStartsOn: 1 })
+  );
+  const [selectedDates, setSelectedDates] = useState<Set<string>>(
+    () => new Set()
   );
 
   const { data: recipes } = useRecipes();
@@ -38,9 +43,20 @@ export function ConnectedMealPlanner() {
   );
   const signedUrl = useGetSignedUrl();
 
+  // Stable key for recipe list to avoid infinite re-renders
+  // (useRecipes returns a new array reference every render)
+  const recipeIds = useMemo(
+    () => recipes?.map((r) => r.uuid).join(",") ?? "",
+    [recipes]
+  );
+
   // Resolve images for all recipes
+  const resolvedRef = useRef("");
   useEffect(() => {
-    if (!recipes) return;
+    if (!recipes || recipes.length === 0 || resolvedRef.current === recipeIds)
+      return;
+    resolvedRef.current = recipeIds;
+
     const newUrls = new Map<RecipeUuid, string>();
     let cancelled = false;
 
@@ -49,7 +65,8 @@ export function ConnectedMealPlanner() {
         if (recipe.images?.[0]?.key) {
           try {
             const result = await signedUrl.mutateAsync(recipe.images[0].key);
-            const url = typeof result === "string" ? result : (result as any)?.url;
+            const url =
+              typeof result === "string" ? result : (result as any)?.url;
             if (url && !cancelled) {
               newUrls.set(recipe.uuid, url);
             }
@@ -66,12 +83,16 @@ export function ConnectedMealPlanner() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recipes]);
+  }, [recipeIds]);
 
-  const days = eachDayOfInterval({
-    start: weekStart,
-    end: endOfWeek(weekStart, { weekStartsOn: 1 }),
-  });
+  const days = useMemo(
+    () =>
+      eachDayOfInterval({
+        start: weekStart,
+        end: endOfWeek(weekStart, { weekStartsOn: 1 }),
+      }),
+    [weekStart]
+  );
 
   // Convert backend data to v0 PlannedMeal[]
   const plannedMeals = useMemo(() => {
@@ -81,15 +102,25 @@ export function ConnectedMealPlanner() {
 
   // Filter to current week
   const weekMeals = useMemo(() => {
-    return plannedMeals.filter((m) =>
+    const realMeals = plannedMeals.filter((m) =>
       days.some((d) => format(d, "yyyy-MM-dd") === m.date)
     );
+    // Fall back to test data when no real meals exist
+    if (realMeals.length === 0) {
+      return testPlannedMeals.filter((m) =>
+        days.some((d) => format(d, "yyyy-MM-dd") === m.date)
+      );
+    }
+    return realMeals;
   }, [plannedMeals, days]);
 
   // Build sidebar recipe list (v0 format)
   const sidebarRecipes = useMemo(() => {
-    if (!recipes) return [];
-    return recipes.map((r) => iRecipeToRecipe(r, imageUrls.get(r.uuid)));
+    if (recipes && recipes.length > 0) {
+      return recipes.map((r) => iRecipeToRecipe(r, imageUrls.get(r.uuid)));
+    }
+    // Fall back to test recipes
+    return allRecipes;
   }, [recipes, imageUrls]);
 
   // Map v0 Recipe title back to IRecipe for meal plan operations
@@ -115,6 +146,18 @@ export function ConnectedMealPlanner() {
     setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }));
   }, []);
 
+  const handleToggleDate = useCallback((dateStr: string) => {
+    setSelectedDates((prev) => {
+      const next = new Set(prev);
+      if (next.has(dateStr)) {
+        next.delete(dateStr);
+      } else {
+        next.add(dateStr);
+      }
+      return next;
+    });
+  }, []);
+
   const handleDrop = useCallback(
     (recipe: Recipe, date: string, _mealType: MealType) => {
       const iRecipe = recipeByTitle.get(recipe.title);
@@ -134,7 +177,6 @@ export function ConnectedMealPlanner() {
 
   const handleUpdateServings = useCallback(
     (id: string, newServings: number) => {
-      // id format: "YYYY-MM-DD-recipeId"
       const parts = id.split("-");
       const isoDate = parts.slice(0, 3).join("-");
       const recipeId = parts.slice(3).join("-");
@@ -143,7 +185,6 @@ export function ConnectedMealPlanner() {
       const iRecipe = recipes?.find((r) => r.uuid === recipeId);
       if (!iRecipe) return;
 
-      // Find current servings to compute the delta
       const currentMeal = weekMeals.find((m) => m.id === id);
       if (!currentMeal) return;
       const delta = newServings - currentMeal.servings;
@@ -169,14 +210,13 @@ export function ConnectedMealPlanner() {
       const iRecipe = recipes?.find((r) => r.uuid === recipeId);
       if (!iRecipe) return;
 
-      // Find current servings so we can negate them
       const currentMeal = weekMeals.find((m) => m.id === id);
       if (!currentMeal) return;
 
       const components = iRecipe.components.map((c) => ({
         recipeId: iRecipe.uuid,
         componentId: c.uuid,
-        servingsIncrease: -(currentMeal.servings + 1), // negative enough to trigger removal
+        servingsIncrease: -(currentMeal.servings + 1),
       }));
 
       putMealPlan.mutate({ date: dateStr, components });
@@ -203,28 +243,51 @@ export function ConnectedMealPlanner() {
             </p>
           </div>
         </div>
-        <WeekNavigation
-          weekStart={weekStart}
-          onPreviousWeek={handlePreviousWeek}
-          onNextWeek={handleNextWeek}
-          onToday={handleToday}
+        <div className="flex items-center gap-2">
+          <WeekNavigation
+            weekStart={weekStart}
+            onPreviousWeek={handlePreviousWeek}
+            onNextWeek={handleNextWeek}
+            onToday={handleToday}
+          />
+          <ShoppingListDialog selectedDates={selectedDates} />
+        </div>
+      </div>
+
+      {/* Desktop: side-by-side layout */}
+      <div className="hidden lg:flex lg:gap-6">
+        <aside className="w-[280px] shrink-0">
+          <div className="sticky top-6">
+            <RecipeSidebar recipes={sidebarRecipes} />
+          </div>
+        </aside>
+        <div className="flex-1 min-w-0">
+          <CalendarGrid
+            days={days}
+            meals={weekMeals}
+            selectedDates={selectedDates}
+            onToggleDate={handleToggleDate}
+            onDrop={handleDrop}
+            onUpdateServings={handleUpdateServings}
+            onRemoveMeal={handleRemoveMeal}
+          />
+        </div>
+      </div>
+
+      {/* Mobile: stacked layout */}
+      <div className="flex flex-col gap-6 lg:hidden">
+        <RecipeSidebar recipes={sidebarRecipes} />
+        <CalendarGrid
+          days={days}
+          meals={weekMeals}
+          selectedDates={selectedDates}
+          onToggleDate={handleToggleDate}
+          onDrop={handleDrop}
+          onUpdateServings={handleUpdateServings}
+          onRemoveMeal={handleRemoveMeal}
         />
       </div>
 
-      {/* Recipe sidebar (shown above calendar on smaller screens within sidebar) */}
-      <RecipeSidebar recipes={sidebarRecipes} />
-
-      {/* Calendar */}
-      <CalendarGrid
-        days={days}
-        meals={weekMeals}
-        onDrop={handleDrop}
-        onUpdateServings={handleUpdateServings}
-        onRemoveMeal={handleRemoveMeal}
-      />
-
-      {/* Shopping list */}
-      <ShoppingListDialog mealPlan={mealPlan.data} />
     </div>
   );
 }

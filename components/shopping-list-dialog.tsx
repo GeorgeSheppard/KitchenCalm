@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -7,153 +7,135 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ShoppingCart, Copy, Check } from "lucide-react";
-import { IMealPlan, DateString } from "../core/types/meal_plan";
-import { useGetKitchencalmShoppingList } from "../client/generated/hooks";
+import { ShoppingCart, Copy, Check, ArrowLeft } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { isoToDateString } from "@/lib/adapters/date-adapter";
+import { useGetKitchencalmShoppingList } from "../client/generated/hooks";
 
 interface ShoppingListDialogProps {
-  mealPlan: IMealPlan;
+  selectedDates: Set<string>;
 }
 
-export function ShoppingListDialog({ mealPlan }: ShoppingListDialogProps) {
-  const [selected, setSelected] = useState<Set<DateString>>(() => new Set());
+export function ShoppingListDialog({ selectedDates }: ShoppingListDialogProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [shoppingList, setShoppingList] = useState("");
+  const [shoppingList, setShoppingList] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const allDates = mealPlan.map((item) => item.date);
-  const allSelected = selected.size === allDates.length && allDates.length > 0;
+  // Convert selected ISO dates to the backend date format for the API
+  const selectedSorted = Array.from(selectedDates).sort();
+  const startDate = selectedSorted[0]
+    ? isoToDateString(selectedSorted[0])
+    : undefined;
+  const endDate = selectedSorted[selectedSorted.length - 1]
+    ? isoToDateString(selectedSorted[selectedSorted.length - 1])
+    : undefined;
 
-  const toggleAll = useCallback(() => {
-    if (allSelected) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(allDates));
+  const { refetch, isLoading } = useGetKitchencalmShoppingList(
+    startDate && endDate ? { startDate, endDate } : undefined,
+    {
+      query: {
+        enabled: false,
+      },
     }
-  }, [allSelected, allDates]);
+  );
 
-  const toggleDate = useCallback((date: DateString) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(date)) {
-        next.delete(date);
-      } else {
-        next.add(date);
-      }
-      return next;
-    });
-  }, []);
-
-  // Get sorted dates for the API call
-  const selectedDatesArray = Array.from(selected).sort();
-  const startDate = selectedDatesArray[0];
-  const endDate = selectedDatesArray[selectedDatesArray.length - 1];
-
-  const { data: shoppingListData, isLoading } =
-    useGetKitchencalmShoppingList(
-      selected.size > 0 ? { startDate, endDate } : undefined,
-      {
-        query: {
-          enabled: selected.size > 0,
-        },
-      }
-    );
-
-  const handleCreateList = () => {
-    if (shoppingListData?.data) {
-      setShoppingList(shoppingListData.data as string);
-      setDialogOpen(true);
+  const handleCreate = async () => {
+    const result = await refetch();
+    if (result.data?.data) {
+      setShoppingList(result.data.data as string);
     }
   };
 
   const handleCopy = async () => {
+    if (!shoppingList) return;
     await navigator.clipboard.writeText(shoppingList);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Only show dates that have meals
-  const datesWithMeals = allDates.filter((date) => {
-    const item = mealPlan.find((i) => i.date === date);
-    return item && Object.keys(item.plan).length > 0;
-  });
+  const handleOpen = () => {
+    setShoppingList(null);
+    setCopied(false);
+    setDialogOpen(true);
+  };
+
+  const handleBack = () => {
+    setShoppingList(null);
+  };
 
   return (
     <>
-      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-foreground">
-            Shopping List
-          </h3>
-          <Button size="sm" variant="ghost" onClick={toggleAll}>
-            {allSelected ? "Deselect all" : "Select all"}
-          </Button>
-        </div>
-
-        {datesWithMeals.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Add meals to your plan to create a shopping list
-          </p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {datesWithMeals.map((date) => {
-              const label = date.split(" - ")[0]?.slice(0, 3) || date;
-              return (
-                <label
-                  key={date}
-                  className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm cursor-pointer hover:bg-accent/50 transition-colors"
-                >
-                  <Checkbox
-                    checked={selected.has(date)}
-                    onCheckedChange={() => toggleDate(date)}
-                  />
-                  <span>{label}</span>
-                </label>
-              );
-            })}
-          </div>
-        )}
-
-        <Button
-          onClick={handleCreateList}
-          disabled={selected.size === 0 || isLoading}
-          className="w-full"
-        >
-          {isLoading ? (
-            <Spinner className="size-4 mr-2" />
-          ) : (
-            <ShoppingCart className="size-4 mr-2" />
-          )}
-          Create Shopping List
-        </Button>
-      </div>
+      <Button variant="outline" size="sm" onClick={handleOpen}>
+        <ShoppingCart className="size-4 mr-2" />
+        Shopping List
+      </Button>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-md sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Shopping List</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="max-h-[60vh]">
-            <pre className="whitespace-pre-wrap text-sm text-foreground p-4">
-              {shoppingList || "No shopping list available."}
-            </pre>
-          </ScrollArea>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Close
-            </Button>
-            <Button onClick={handleCopy}>
-              {copied ? (
-                <Check className="size-4 mr-2" />
-              ) : (
-                <Copy className="size-4 mr-2" />
+            <DialogTitle className="flex items-center gap-2">
+              {shoppingList && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  onClick={handleBack}
+                >
+                  <ArrowLeft className="size-4" />
+                </Button>
               )}
-              {copied ? "Copied!" : "Copy to clipboard"}
-            </Button>
-          </DialogFooter>
+              Shopping List
+            </DialogTitle>
+          </DialogHeader>
+
+          {shoppingList ? (
+            <>
+              <div className="overflow-y-auto max-h-[60vh]">
+                <pre className="whitespace-pre-wrap text-sm text-foreground p-4 bg-secondary/40 rounded-lg">
+                  {shoppingList}
+                </pre>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                  Close
+                </Button>
+                <Button onClick={handleCopy}>
+                  {copied ? (
+                    <Check className="size-4 mr-2" />
+                  ) : (
+                    <Copy className="size-4 mr-2" />
+                  )}
+                  {copied ? "Copied!" : "Copy to clipboard"}
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              {selectedDates.size === 0 ? (
+                <p className="text-sm text-muted-foreground py-4">
+                  Click on days in the calendar to select them, then create your shopping list.
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground py-2">
+                  {selectedDates.size} day{selectedDates.size === 1 ? "" : "s"} selected in the calendar.
+                </p>
+              )}
+              <DialogFooter>
+                <Button
+                  onClick={handleCreate}
+                  disabled={selectedDates.size === 0 || isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? (
+                    <Spinner className="size-4 mr-2" />
+                  ) : (
+                    <ShoppingCart className="size-4 mr-2" />
+                  )}
+                  Create Shopping List
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </>

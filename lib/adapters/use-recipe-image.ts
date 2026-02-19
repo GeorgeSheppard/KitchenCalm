@@ -24,7 +24,7 @@ export function useRecipeImage(images?: S3Image[]): string | undefined {
       .then((result: any) => {
         if (!cancelled) {
           // The result may be a string URL or an object with a url property
-          const url = typeof result === "string" ? result : result?.url;
+          const url = typeof result === "string" ? result : result?.signedUrl;
           setImageUrl(url);
         }
       })

@@ -1,23 +1,13 @@
-import { useState } from "react";
 import { SearchBar } from "../../components/search-bar";
 import { RecipeGrid } from "../../components/recipe-grid";
 import { SharedRecipeBanner } from "../../components/shared-recipe-banner";
-import {
-  SearchableAttributes,
-  useRecipeSearch,
-} from "../../core/recipes/hooks/use_recipe_search";
+import { useRecipeSearch } from "../../core/recipes/hooks/use_recipe_search";
 import { useSearchDebounce } from "../../core/hooks/use_search_debounce";
 import { IRecipe } from "../../core/types/recipes";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
 import { ParsedUrlQuery } from "querystring";
 
 type SharedRecipeId = string;
-
-const allSearchValues = new Set<SearchableAttributes>([
-  "name",
-  "description",
-  "ingredients",
-]);
 
 const getSharedRecipeIdFromQuery = (
   query: ParsedUrlQuery
@@ -56,10 +46,9 @@ export const getServerSideProps = async (
 };
 
 const Recipes = (props: Props) => {
-  const [keys, setKeys] = useState(() => allSearchValues);
   const [searchString, debouncedValue, setSearchString] =
     useSearchDebounce("");
-  const searchResults = useRecipeSearch(debouncedValue, keys);
+  const searchResults = useRecipeSearch(debouncedValue);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
@@ -73,8 +62,6 @@ const Recipes = (props: Props) => {
         <SearchBar
           searchString={searchString}
           onSearchChange={setSearchString}
-          keys={keys}
-          onKeysChange={setKeys}
         />
         <RecipeGrid recipeIds={searchResults} />
       </div>

@@ -38,10 +38,11 @@ const useMutateMealPlanInCache = () => {
   const mealPlanKey = getMealPlanQueryKey();
 
   return (newMealPlan: IMealPlan) => {
-    const previousMealPlan: IMealPlan | undefined =
-      queryClient.getQueryData(mealPlanKey);
+    const previousMealPlan = queryClient.getQueryData(mealPlanKey);
 
-    queryClient.setQueryData(mealPlanKey, newMealPlan);
+    // Wrap in { data: ... } to match the AxiosResponse shape that
+    // useGetMealPlan's select function expects
+    queryClient.setQueryData(mealPlanKey, { data: newMealPlan });
 
     return {
       undo: () => {
@@ -81,9 +82,11 @@ export const usePutMealPlanToDynamo = () => {
   return {
     ...updateMealPlan,
     mutate: (update: IAddOrUpdatePlan) => {
-      const currentMealPlan = queryClient.getQueryData(mealPlanKey) as IMealPlan | undefined
-      if (!currentMealPlan) throw new Error('Cannot modify empty meal plan')
+      const cachedData = queryClient.getQueryData(mealPlanKey) as any;
+      const currentMealPlan = cachedData?.data as IMealPlan | undefined;
+      if (!currentMealPlan || !Array.isArray(currentMealPlan)) throw new Error('Cannot modify empty meal plan')
       const updatedMealPlan = addOrUpdatePlan(currentMealPlan, update);
+      mutate(updatedMealPlan);
       updateMealPlan.mutate(updatedMealPlan);
     },
   };

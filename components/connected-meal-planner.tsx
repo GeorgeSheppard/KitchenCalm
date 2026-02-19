@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   startOfWeek,
   addWeeks,
@@ -13,12 +13,15 @@ import { useMealPlan } from "../core/dynamo/hooks/use_dynamo_get";
 import { usePutMealPlanToDynamo } from "../core/dynamo/hooks/use_dynamo_put";
 import { iRecipeToRecipe } from "@/lib/adapters/recipe-adapter";
 import { mealPlanToPlannedMeals } from "@/lib/adapters/meal-plan-adapter";
-import { isoToDateString } from "@/lib/adapters/date-adapter";
 import { useGetSignedUrl } from "../client/hooks";
+import {
+  parseMealId,
+  buildUpdateServingsPayload,
+  buildRemoveMealPayload,
+  buildDropPayload,
+} from "../core/meal_plan/meal_plan_utilities";
 import type { Recipe } from "@/lib/recipe-data";
-import { allRecipes } from "@/lib/recipe-data";
 import type { MealType } from "@/lib/meal-planner-data";
-import { testPlannedMeals } from "@/lib/test-data";
 import { RecipeUuid, IRecipe } from "../core/types/recipes";
 import { WeekNavigation } from "./meal-planner/week-navigation";
 import { CalendarGrid } from "./meal-planner/calendar-grid";
@@ -51,11 +54,8 @@ export function ConnectedMealPlanner() {
   );
 
   // Resolve images for all recipes
-  const resolvedRef = useRef("");
   useEffect(() => {
-    if (!recipes || recipes.length === 0 || resolvedRef.current === recipeIds)
-      return;
-    resolvedRef.current = recipeIds;
+    if (!recipes || recipes.length === 0) return;
 
     const newUrls = new Map<RecipeUuid, string>();
     let cancelled = false;
@@ -66,7 +66,7 @@ export function ConnectedMealPlanner() {
           try {
             const result = await signedUrl.mutateAsync(recipe.images[0].key);
             const url =
-              typeof result === "string" ? result : (result as any)?.url;
+              typeof result === "string" ? result : (result as any)?.signedUrl;
             if (url && !cancelled) {
               newUrls.set(recipe.uuid, url);
             }
@@ -102,25 +102,15 @@ export function ConnectedMealPlanner() {
 
   // Filter to current week
   const weekMeals = useMemo(() => {
-    const realMeals = plannedMeals.filter((m) =>
+    return plannedMeals.filter((m) =>
       days.some((d) => format(d, "yyyy-MM-dd") === m.date)
     );
-    // Fall back to test data when no real meals exist
-    if (realMeals.length === 0) {
-      return testPlannedMeals.filter((m) =>
-        days.some((d) => format(d, "yyyy-MM-dd") === m.date)
-      );
-    }
-    return realMeals;
   }, [plannedMeals, days]);
 
   // Build sidebar recipe list (v0 format)
   const sidebarRecipes = useMemo(() => {
-    if (recipes && recipes.length > 0) {
-      return recipes.map((r) => iRecipeToRecipe(r, imageUrls.get(r.uuid)));
-    }
-    // Fall back to test recipes
-    return allRecipes;
+    if (!recipes) return [];
+    return recipes.map((r) => iRecipeToRecipe(r, imageUrls.get(r.uuid)));
   }, [recipes, imageUrls]);
 
   // Map v0 Recipe title back to IRecipe for meal plan operations
@@ -162,64 +152,31 @@ export function ConnectedMealPlanner() {
     (recipe: Recipe, date: string, _mealType: MealType) => {
       const iRecipe = recipeByTitle.get(recipe.title);
       if (!iRecipe) return;
-
-      const dateStr = isoToDateString(date);
-      const components = iRecipe.components.map((c) => ({
-        recipeId: iRecipe.uuid,
-        componentId: c.uuid,
-        servingsIncrease: c.servings || 1,
-      }));
-
-      putMealPlan.mutate({ date: dateStr, components });
+      putMealPlan.mutate(buildDropPayload(iRecipe, date));
     },
     [recipeByTitle, putMealPlan]
   );
 
   const handleUpdateServings = useCallback(
     (id: string, newServings: number) => {
-      const parts = id.split("-");
-      const isoDate = parts.slice(0, 3).join("-");
-      const recipeId = parts.slice(3).join("-");
-
-      const dateStr = isoToDateString(isoDate);
+      const { isoDate, recipeId } = parseMealId(id);
       const iRecipe = recipes?.find((r) => r.uuid === recipeId);
       if (!iRecipe) return;
-
       const currentMeal = weekMeals.find((m) => m.id === id);
       if (!currentMeal) return;
-      const delta = newServings - currentMeal.servings;
-
-      const components = iRecipe.components.map((c) => ({
-        recipeId: iRecipe.uuid,
-        componentId: c.uuid,
-        servingsIncrease: delta,
-      }));
-
-      putMealPlan.mutate({ date: dateStr, components });
+      putMealPlan.mutate(buildUpdateServingsPayload(iRecipe, isoDate, currentMeal.servings, newServings));
     },
     [recipes, weekMeals, putMealPlan]
   );
 
   const handleRemoveMeal = useCallback(
     (id: string) => {
-      const parts = id.split("-");
-      const isoDate = parts.slice(0, 3).join("-");
-      const recipeId = parts.slice(3).join("-");
-
-      const dateStr = isoToDateString(isoDate);
+      const { isoDate, recipeId } = parseMealId(id);
       const iRecipe = recipes?.find((r) => r.uuid === recipeId);
       if (!iRecipe) return;
-
       const currentMeal = weekMeals.find((m) => m.id === id);
       if (!currentMeal) return;
-
-      const components = iRecipe.components.map((c) => ({
-        recipeId: iRecipe.uuid,
-        componentId: c.uuid,
-        servingsIncrease: -(currentMeal.servings + 1),
-      }));
-
-      putMealPlan.mutate({ date: dateStr, components });
+      putMealPlan.mutate(buildRemoveMealPayload(iRecipe, isoDate, currentMeal.servings));
     },
     [recipes, weekMeals, putMealPlan]
   );

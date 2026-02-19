@@ -58,7 +58,7 @@ export function iRecipeToRecipe(
     cookTime: "",
     totalTime: "",
     servings: servingsStr,
-    difficulty: "Medium",
+    difficulty: undefined,
     tags: [],
     parts: iRecipe.components.map(componentToRecipePart),
   };

@@ -11,6 +11,7 @@ import { ShoppingCart, Copy, Check, ArrowLeft } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { isoToDateString } from "@/lib/adapters/date-adapter";
 import { useGetKitchencalmShoppingList } from "../client/generated/hooks";
+import { useAppSession } from "../core/hooks/use_app_session";
 
 interface ShoppingListDialogProps {
   selectedDates: Set<string>;
@@ -30,11 +31,15 @@ export function ShoppingListDialog({ selectedDates }: ShoppingListDialogProps) {
     ? isoToDateString(selectedSorted[selectedSorted.length - 1])
     : undefined;
 
-  const { refetch, isLoading } = useGetKitchencalmShoppingList(
+  const { accessToken } = useAppSession();
+  const { refetch, isFetching } = useGetKitchencalmShoppingList(
     startDate && endDate ? { startDate, endDate } : undefined,
     {
       query: {
         enabled: false,
+      },
+      axios: {
+        headers: accessToken ? { authorization: `Bearer ${accessToken}` } : {},
       },
     }
   );
@@ -123,10 +128,10 @@ export function ShoppingListDialog({ selectedDates }: ShoppingListDialogProps) {
               <DialogFooter>
                 <Button
                   onClick={handleCreate}
-                  disabled={selectedDates.size === 0 || isLoading}
+                  disabled={selectedDates.size === 0 || isFetching}
                   className="w-full"
                 >
-                  {isLoading ? (
+                  {isFetching ? (
                     <Spinner className="size-4 mr-2" />
                   ) : (
                     <ShoppingCart className="size-4 mr-2" />

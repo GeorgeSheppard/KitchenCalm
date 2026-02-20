@@ -3,18 +3,19 @@
 import Image from "@/components/ui/next-image-compat"
 import type { Recipe } from "@/lib/recipe-data"
 import { Badge } from "@/components/ui/badge"
+import { SearchBar } from "@/components/search-bar"
 import { Clock, GripVertical } from "lucide-react"
 
 interface RecipeSidebarProps {
   recipes: Recipe[]
+  searchString: string
+  onSearchChange: (value: string) => void
 }
 
-export function RecipeSidebar({ recipes }: RecipeSidebarProps) {
+export function RecipeSidebar({ recipes, searchString, onSearchChange }: RecipeSidebarProps) {
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
-        Recipes
-      </h2>
+      <SearchBar searchString={searchString} onSearchChange={onSearchChange} />
       <div className="flex flex-col gap-2">
         {recipes.map((recipe) => (
           <DraggableRecipe key={recipe.title} recipe={recipe} />

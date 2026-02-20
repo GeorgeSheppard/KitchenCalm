@@ -38,5 +38,5 @@ export function isoToDateString(iso: string): DateString {
   const [y, m, d] = iso.split("-").map(Number);
   const date = new Date(y, m - 1, d, 12, 0, 0);
   const weekday = WEEKDAYS[date.getDay()];
-  return `${weekday} - ${d}/${m}/${y}`;
+  return `${weekday} - ${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y}`;
 }

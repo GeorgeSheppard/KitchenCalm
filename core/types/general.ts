@@ -4,6 +4,7 @@ export type S3SignedUrl = string;
 export interface Image {
   timestamp: number;
   key: S3Key;
+  presignedUrl?: string;
 }
 
 export interface SignedImage {

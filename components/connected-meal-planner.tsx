@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   startOfWeek,
   addWeeks,
@@ -10,10 +10,11 @@ import {
 import { UtensilsCrossed } from "lucide-react";
 import { useRecipes } from "../core/dynamo/hooks/use_dynamo_get";
 import { useMealPlan } from "../core/dynamo/hooks/use_dynamo_get";
+import { useRecipeSearch } from "../core/recipes/hooks/use_recipe_search";
+import { useSearchDebounce } from "../core/hooks/use_search_debounce";
 import { usePutMealPlanToDynamo } from "../core/dynamo/hooks/use_dynamo_put";
 import { iRecipeToRecipe } from "@/lib/adapters/recipe-adapter";
 import { mealPlanToPlannedMeals } from "@/lib/adapters/meal-plan-adapter";
-import { useGetSignedUrl } from "../client/hooks";
 import {
   parseMealId,
   buildUpdateServingsPayload,
@@ -36,54 +37,25 @@ export function ConnectedMealPlanner() {
     () => new Set()
   );
 
+  const [searchString, debouncedSearch, setSearchString] = useSearchDebounce("");
   const { data: recipes } = useRecipes();
+  const searchResultIds = useRecipeSearch(debouncedSearch);
   const mealPlan = useMealPlan();
   const putMealPlan = usePutMealPlanToDynamo();
 
-  // Build image URL map from recipes
-  const [imageUrls, setImageUrls] = useState<Map<RecipeUuid, string>>(
-    new Map()
-  );
-  const signedUrl = useGetSignedUrl();
-
-  // Stable key for recipe list to avoid infinite re-renders
-  // (useRecipes returns a new array reference every render)
-  const recipeIds = useMemo(
-    () => recipes?.map((r) => r.uuid).join(",") ?? "",
-    [recipes]
-  );
-
-  // Resolve images for all recipes
-  useEffect(() => {
-    if (!recipes || recipes.length === 0) return;
-
-    const newUrls = new Map<RecipeUuid, string>();
-    let cancelled = false;
-
-    const resolveImages = async () => {
+  // Build image URL map from presigned URLs included in recipe data
+  const imageUrls = useMemo(() => {
+    const urls = new Map<RecipeUuid, string>();
+    if (recipes) {
       for (const recipe of recipes) {
-        if (recipe.images?.[0]?.key) {
-          try {
-            const result = await signedUrl.mutateAsync(recipe.images[0].key);
-            const url =
-              typeof result === "string" ? result : (result as any)?.signedUrl;
-            if (url && !cancelled) {
-              newUrls.set(recipe.uuid, url);
-            }
-          } catch {
-            // skip
-          }
+        const url = recipe.images?.[0]?.presignedUrl;
+        if (url) {
+          urls.set(recipe.uuid, url);
         }
       }
-      if (!cancelled) setImageUrls(newUrls);
-    };
-
-    resolveImages();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recipeIds]);
+    }
+    return urls;
+  }, [recipes]);
 
   const days = useMemo(
     () =>
@@ -107,11 +79,14 @@ export function ConnectedMealPlanner() {
     );
   }, [plannedMeals, days]);
 
-  // Build sidebar recipe list (v0 format)
+  // Build sidebar recipe list (v0 format), filtered by search
   const sidebarRecipes = useMemo(() => {
     if (!recipes) return [];
-    return recipes.map((r) => iRecipeToRecipe(r, imageUrls.get(r.uuid)));
-  }, [recipes, imageUrls]);
+    const ids = new Set(searchResultIds);
+    return recipes
+      .filter((r) => ids.has(r.uuid))
+      .map((r) => iRecipeToRecipe(r, imageUrls.get(r.uuid)));
+  }, [recipes, imageUrls, searchResultIds]);
 
   // Map v0 Recipe title back to IRecipe for meal plan operations
   const recipeByTitle = useMemo(() => {
@@ -215,7 +190,7 @@ export function ConnectedMealPlanner() {
       <div className="hidden lg:flex lg:gap-6">
         <aside className="w-[280px] shrink-0">
           <div className="sticky top-6">
-            <RecipeSidebar recipes={sidebarRecipes} />
+            <RecipeSidebar recipes={sidebarRecipes} searchString={searchString} onSearchChange={setSearchString} />
           </div>
         </aside>
         <div className="flex-1 min-w-0">
@@ -233,7 +208,7 @@ export function ConnectedMealPlanner() {
 
       {/* Mobile: stacked layout */}
       <div className="flex flex-col gap-6 lg:hidden">
-        <RecipeSidebar recipes={sidebarRecipes} />
+        <RecipeSidebar recipes={sidebarRecipes} searchString={searchString} onSearchChange={setSearchString} />
         <CalendarGrid
           days={days}
           meals={weekMeals}

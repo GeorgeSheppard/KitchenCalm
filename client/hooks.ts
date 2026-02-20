@@ -59,6 +59,7 @@ export const useGetRecipes = (
   const query = useGetKitchencalmRecipesBase({
     query: {
       ...options?.query,
+      enabled: (options?.query?.enabled ?? true) && !!accessToken,
       select: (response: any) => response.data,
     },
     axios: {
@@ -87,6 +88,7 @@ export const useGetMealPlan = (
   const query = useGetKitchencalmMealPlanBase({
     query: {
       ...options?.query,
+      enabled: (options?.query?.enabled ?? true) && !!accessToken,
       select: (response: any) => response.data,
     },
     axios: {

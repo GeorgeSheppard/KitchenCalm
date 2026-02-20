@@ -107,7 +107,7 @@ describe("buildUpdateServingsPayload", () => {
     const recipe = makeRecipe();
     // 2026-02-19 is a Thursday
     const result = buildUpdateServingsPayload(recipe, "2026-02-19", 1, 2);
-    expect(result.date).toBe("Thursday - 19/2/2026");
+    expect(result.date).toBe("Thursday - 19/02/2026");
   });
 });
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
 import { X, Save } from "lucide-react";
 import { IRecipe } from "../core/types/recipes";
+import { S3Key, Image } from "../core/types/general";
 import { useParsedRecipeToDynamo } from "../core/dynamo/hooks/use_parse_recipe";
+import { usePutRecipeToDynamo } from "../core/dynamo/hooks/use_dynamo_put";
 import { recipeToString, isNewRecipe } from "../core/utils/recipe_formatter";
+import { useRecipeImage } from "@/lib/adapters/use-recipe-image";
+import { RecipeImageUpload } from "./recipe-image-upload";
 
 interface RecipeEditorProps {
   recipe: IRecipe;
@@ -16,6 +20,7 @@ interface RecipeEditorProps {
 export function RecipeEditor({ recipe }: RecipeEditorProps) {
   const router = useRouter();
   const parsedRecipe = useParsedRecipeToDynamo();
+  const putRecipe = usePutRecipeToDynamo();
 
   const [text, setText] = useState(() => {
     if (isNewRecipe(recipe)) return "";
@@ -23,11 +28,41 @@ export function RecipeEditor({ recipe }: RecipeEditorProps) {
   });
   const [saving, setSaving] = useState(false);
 
+  const existingImageUrl = useRecipeImage(recipe.images);
+  const [imageKey, setImageKey] = useState<S3Key | undefined>(
+    recipe.images?.[0]?.key
+  );
+  const [imageRemoved, setImageRemoved] = useState(false);
+
+  const handleImageUploaded = useCallback((key: S3Key) => {
+    setImageKey(key);
+    setImageRemoved(false);
+  }, []);
+
+  const handleImageRemoved = useCallback(() => {
+    setImageKey(undefined);
+    setImageRemoved(true);
+  }, []);
+
   const handleSave = async () => {
     if (!text.trim()) return;
     setSaving(true);
     try {
-      await parsedRecipe.mutateAsync(text, recipe.uuid);
+      const parsed = await parsedRecipe.mutateAsync(text, recipe.uuid);
+
+      const images: Image[] = imageKey
+        ? [{ key: imageKey, timestamp: Date.now() }]
+        : imageRemoved
+          ? []
+          : recipe.images;
+
+      const recipeWithImage = {
+        ...parsed,
+        uuid: recipe.uuid || parsed.uuid,
+        images,
+      } as IRecipe;
+
+      await putRecipe.mutateAsync(recipeWithImage);
       router.push("/food");
     } catch {
       setSaving(false);
@@ -51,6 +86,12 @@ export function RecipeEditor({ recipe }: RecipeEditorProps) {
             </Button>
           </div>
         </div>
+
+        <RecipeImageUpload
+          initialImageUrl={existingImageUrl}
+          onImageUploaded={handleImageUploaded}
+          onImageRemoved={handleImageRemoved}
+        />
 
         <Textarea
           value={text}

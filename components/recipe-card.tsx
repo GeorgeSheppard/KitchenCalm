@@ -5,11 +5,11 @@ import { RecipePartSection } from "@/components/recipe-part"
 import { RecipeNotes } from "@/components/recipe-notes"
 import type { Recipe } from "@/lib/recipe-data"
 
-export function RecipeCard({ recipe }: { recipe: Recipe }) {
+export function RecipeCard({ recipe, actions }: { recipe: Recipe; actions?: React.ReactNode }) {
   return (
     <Card className="overflow-hidden border-border/60 shadow-sm">
       <CardContent className="flex flex-col gap-8 p-5 sm:p-8">
-        <RecipeHeader recipe={recipe} />
+        <RecipeHeader recipe={recipe} actions={actions} />
 
         <Separator />
 

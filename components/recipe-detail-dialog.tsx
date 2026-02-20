@@ -30,6 +30,13 @@ export function RecipeDetailDialog({
 
   if (!v0Recipe) return null;
 
+  const actions = recipe ? (
+    <RecipeActions
+      recipe={recipe}
+      onClose={() => onOpenChange(false)}
+    />
+  ) : undefined;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl sm:max-w-3xl max-h-[90vh] p-0 gap-0 overflow-hidden">
@@ -37,16 +44,10 @@ export function RecipeDetailDialog({
           <h2 className="font-serif text-lg text-foreground">
             {v0Recipe.title}
           </h2>
-          {recipe && (
-            <RecipeActions
-              recipe={recipe}
-              onClose={() => onOpenChange(false)}
-            />
-          )}
         </div>
         <div className="overflow-y-auto max-h-[calc(90vh-60px)]">
           <div className="p-1">
-            <RecipeCard recipe={v0Recipe} />
+            <RecipeCard recipe={v0Recipe} actions={actions} />
           </div>
         </div>
       </DialogContent>

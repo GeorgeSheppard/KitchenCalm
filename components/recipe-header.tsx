@@ -9,7 +9,7 @@ const difficultyColor = {
   Hard: "bg-destructive/15 text-destructive",
 }
 
-export function RecipeHeader({ recipe }: { recipe: Recipe }) {
+export function RecipeHeader({ recipe, actions }: { recipe: Recipe; actions?: React.ReactNode }) {
   const hasImage = recipe.image && recipe.image !== "/placeholder.svg"
   const hasTags = recipe.tags && recipe.tags.length > 0
   const hasMetadata = recipe.prepTime || recipe.cookTime || recipe.totalTime || recipe.servings
@@ -47,6 +47,7 @@ export function RecipeHeader({ recipe }: { recipe: Recipe }) {
         <h1 className="font-serif text-2xl tracking-tight text-foreground sm:text-3xl md:text-4xl text-balance">
           {recipe.title}
         </h1>
+        {actions}
         {recipe.description && (
           <p className="text-muted-foreground leading-relaxed max-w-2xl">
             {recipe.description}

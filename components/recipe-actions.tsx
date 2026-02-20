@@ -1,14 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Share2, Copy, Trash2 } from "lucide-react";
+import { Pencil, Share2, Copy, Trash2 } from "lucide-react";
 import { IRecipe } from "../core/types/recipes";
 import { Quantities } from "../core/recipes/units";
 import { useShareRecipe } from "../client/hooks";
@@ -61,38 +54,34 @@ export function RecipeActions({ recipe, onClose }: RecipeActionsProps) {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="size-8">
-            <MoreHorizontal className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={handleEdit}>
-            <Pencil className="size-4 mr-2" />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={handleShare}
-            disabled={session.loading || !session.id}
-          >
-            <Share2 className="size-4 mr-2" />
-            Share link
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleCopyIngredients}>
-            <Copy className="size-4 mr-2" />
-            Copy ingredients
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => setDeleteOpen(true)}
-            className="text-destructive focus:text-destructive"
-          >
-            <Trash2 className="size-4 mr-2" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm" onClick={handleEdit}>
+          <Pencil className="size-3.5 mr-1.5" />
+          Edit
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleShare}
+          disabled={session.loading || !session.id}
+        >
+          <Share2 className="size-3.5 mr-1.5" />
+          Share
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleCopyIngredients}>
+          <Copy className="size-3.5 mr-1.5" />
+          Copy ingredients
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setDeleteOpen(true)}
+          className="text-destructive hover:text-destructive"
+        >
+          <Trash2 className="size-3.5 mr-1.5" />
+          Delete
+        </Button>
+      </div>
 
       <DeleteRecipeDialog
         recipe={recipe}

@@ -1,9 +1,9 @@
-import LinearProgress from "@mui/material/LinearProgress";
 import { useRouter } from "next/router";
 import { v4 as uuidv4 } from "uuid";
 import { useRecipe } from "../../core/dynamo/hooks/use_dynamo_get";
 import { RecipeUuid } from "../../core/types/recipes";
-import { TextInputWithData } from "../../components/pages/food/[recipeUuid]/text_input_with_data";
+import { RecipeEditor } from "../../components/recipe-editor";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const NewRecipe = "newRecipe";
 
@@ -28,27 +28,46 @@ export default function RecipeForm() {
   const router = useRouter();
   const uuid = router.query.recipeUuid as RecipeUuid | undefined;
   const recipe = useRecipe(uuid);
+
   if (!uuid) {
-    return <LinearProgress />;
+    return (
+      <div className="mx-auto max-w-3xl p-6">
+        <Skeleton className="h-[500px] rounded-xl" />
+      </div>
+    );
   }
+
   if (uuid === NewRecipe) {
-    return <TextInputWithData recipe={getDefaultRecipe(uuidv4())} />;
+    return (
+      <main className="px-4 py-6 sm:px-6">
+        <RecipeEditor recipe={getDefaultRecipe(uuidv4())} />
+      </main>
+    );
   }
+
   if (recipe.isError) {
     console.error("Error: ", recipe.error);
     router.push("/food");
-    return;
+    return null;
   }
 
   if (recipe.isLoading) {
-    return <LinearProgress />;
+    return (
+      <div className="mx-auto max-w-3xl p-6">
+        <Skeleton className="h-[500px] rounded-xl" />
+      </div>
+    );
   }
 
   if (!recipe.data) {
     console.error(`Error: ${uuid} doesn't exist`);
     router.push("/food");
-    return;
+    return null;
   }
 
-  return <TextInputWithData recipe={recipe.data} />;
+  return (
+    <main className="px-4 py-6 sm:px-6">
+      <RecipeEditor recipe={recipe.data} />
+    </main>
+  );
 }

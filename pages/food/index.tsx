@@ -1,29 +1,17 @@
-import { NoSsr } from "@mui/material";
-import { useState } from "react";
-import { useIsMobileLayout } from "../../components/hooks/is_mobile_layout";
-import { DesktopLayout } from "../../components/pages/food/index/desktop_layout";
-import { MobileLayout } from "../../components/pages/food/index/mobile_layout";
-import { useRecipeIds } from "../../core/dynamo/hooks/use_dynamo_get";
-import { useBoolean } from "../../core/hooks/use_boolean";
-import {
-  SearchableAttributes,
-  useRecipeSearch,
-} from "../../core/recipes/hooks/use_recipe_search";
-import { DateString } from "../../core/types/meal_plan";
-import { ParsedUrlQuery } from "querystring";
+import { SearchBar } from "../../components/search-bar";
+import { RecipeGrid } from "../../components/recipe-grid";
+import { SharedRecipeBanner } from "../../components/shared-recipe-banner";
+import { useRecipeSearch } from "../../core/recipes/hooks/use_recipe_search";
 import { useSearchDebounce } from "../../core/hooks/use_search_debounce";
 import { IRecipe } from "../../core/types/recipes";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
+import { ParsedUrlQuery } from "querystring";
 
 type SharedRecipeId = string;
 
-const allSearchValues = new Set<SearchableAttributes>([
-  "name",
-  "description",
-  "ingredients",
-]);
-
-const getSharedRecipeIdFromQuery = (query: ParsedUrlQuery): SharedRecipeId | undefined => {
+const getSharedRecipeIdFromQuery = (
+  query: ParsedUrlQuery
+): SharedRecipeId | undefined => {
   const { share } = query;
   if (share instanceof Array) return;
   if (!share) return;
@@ -52,58 +40,32 @@ export const getServerSideProps = async (
       props: { sharedRecipe: recipe },
     };
   } catch (error) {
-    console.error('Error fetching shared recipe:', error);
+    console.error("Error fetching shared recipe:", error);
     return { props: { sharedRecipe: null } };
   }
 };
 
 const Recipes = (props: Props) => {
-  const mobileLayout = useIsMobileLayout();
+  const [searchString, debouncedValue, setSearchString] =
+    useSearchDebounce("");
+  const searchResults = useRecipeSearch(debouncedValue);
 
-  const [keys, setKeys] = useState(() => allSearchValues);
-  const [searchString, debouncedValue, setSearchString] = useSearchDebounce("");
-  const searchResults = useRecipeSearch(
-    debouncedValue,
-    mobileLayout ? allSearchValues : keys
-  );
-  const recipeIds = useRecipeIds();
-  const [selected, setSelected] = useState<Set<DateString>>(() => new Set());
-  const booleanState = useBoolean(false);
-  const [shoppingListData, setShoppingListData] = useState<string>("");
-
-  // NoSsr because of media query used to determine mobile layout or not
   return (
-    <NoSsr>
-      {mobileLayout ? (
-        <MobileLayout
-          searchResults={searchResults}
-          recipeIds={recipeIds}
-          selected={selected}
-          setSelected={setSelected}
-          booleanState={booleanState}
-          shoppingListData={shoppingListData}
-          setShoppingListData={setShoppingListData}
-          sharedRecipe={props.sharedRecipe}
-          searchString={searchString}
-          setSearchString={setSearchString}
-        />
-      ) : (
-        <DesktopLayout
-          keys={keys}
-          setKeys={setKeys}
-          searchResults={searchResults}
-          recipeIds={recipeIds}
-          selected={selected}
-          setSelected={setSelected}
-          booleanState={booleanState}
-          shoppingListData={shoppingListData}
-          setShoppingListData={setShoppingListData}
-          sharedRecipe={props.sharedRecipe}
-          searchString={searchString}
-          setSearchString={setSearchString}
-        />
+    <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+      {props.sharedRecipe && (
+        <div className="mb-6">
+          <SharedRecipeBanner recipe={props.sharedRecipe} />
+        </div>
       )}
-    </NoSsr>
+
+      <div className="flex flex-col gap-4">
+        <SearchBar
+          searchString={searchString}
+          onSearchChange={setSearchString}
+        />
+        <RecipeGrid recipeIds={searchResults} />
+      </div>
+    </main>
   );
 };
 

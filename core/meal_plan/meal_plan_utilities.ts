@@ -1,6 +1,7 @@
 import clone from "just-clone";
-import { ComponentUuid, RecipeUuid } from "../types/recipes";
+import { ComponentUuid, IRecipe, RecipeUuid } from "../types/recipes";
 import { DateString, IMealPlan } from "../types/meal_plan";
+import { isoToDateString } from "../../lib/adapters/date-adapter";
 
 export function addDays(theDate: Date, days: number) {
   return new Date(theDate.getTime() + days * 24 * 60 * 60 * 1000);
@@ -113,3 +114,71 @@ export const addOrUpdatePlan = (
 
   return mealPlan;
 };
+
+/**
+ * Parse a meal ID (e.g. "2026-02-19-recipe-uuid") into its parts.
+ */
+export function parseMealId(id: string): { isoDate: string; recipeId: RecipeUuid } {
+  const parts = id.split("-");
+  return {
+    isoDate: parts.slice(0, 3).join("-"),
+    recipeId: parts.slice(3).join("-"),
+  };
+}
+
+/**
+ * Build an IAddOrUpdatePlan to change servings for a recipe on a given date.
+ */
+export function buildUpdateServingsPayload(
+  recipe: IRecipe,
+  isoDate: string,
+  currentServings: number,
+  newServings: number,
+): IAddOrUpdatePlan {
+  const delta = newServings - currentServings;
+  // Apply the delta to only the first component, since the UI displays
+  // the sum across all components as a single number.
+  return {
+    date: isoToDateString(isoDate),
+    components: [{
+      recipeId: recipe.uuid,
+      componentId: recipe.components[0].uuid,
+      servingsIncrease: delta,
+    }],
+  };
+}
+
+/**
+ * Build an IAddOrUpdatePlan to remove a recipe from a given date entirely.
+ */
+export function buildRemoveMealPayload(
+  recipe: IRecipe,
+  isoDate: string,
+  currentServings: number,
+): IAddOrUpdatePlan {
+  return {
+    date: isoToDateString(isoDate),
+    components: recipe.components.map((c) => ({
+      recipeId: recipe.uuid,
+      componentId: c.uuid,
+      servingsIncrease: -(currentServings + 1),
+    })),
+  };
+}
+
+/**
+ * Build an IAddOrUpdatePlan to add a recipe to a given date (from drag & drop).
+ */
+export function buildDropPayload(
+  recipe: IRecipe,
+  isoDate: string,
+): IAddOrUpdatePlan {
+  return {
+    date: isoToDateString(isoDate),
+    components: recipe.components.map((c) => ({
+      recipeId: recipe.uuid,
+      componentId: c.uuid,
+      servingsIncrease: c.servings || 1,
+    })),
+  };
+}

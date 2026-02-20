@@ -11,9 +11,10 @@ export interface SearchableRecipe {
 }
 export type SearchableAttributes = keyof Omit<SearchableRecipe, "uuid">;
 
+const ALL_KEYS: SearchableAttributes[] = ["name", "description", "ingredients"];
+
 export const useRecipeSearch = (
   searchInput: string,
-  keys: Set<SearchableAttributes>
 ): RecipeUuid[] => {
   const { data: recipes } = useRecipes();
   const searchableRecipes = useMemo(() => {
@@ -36,9 +37,9 @@ export const useRecipeSearch = (
   }, [recipes]);
   const options = useMemo(
     () => ({
-      keys: Array.from(keys),
+      keys: ALL_KEYS,
     }),
-    [keys]
+    []
   );
   const search = useSearch<SearchableRecipe>(searchableRecipes, options);
   const defaultSearchResults = useMemo(

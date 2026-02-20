@@ -89,6 +89,11 @@
           "key": {
             "type": "string",
             "description": "S3 object key"
+          },
+          "presignedUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Presigned URL for downloading the image (undefined if generation failed)"
           }
         },
         "required": [
@@ -1433,22 +1438,22 @@
         "parameters": [
           {
             "schema": {
-              "type": "string",
-              "description": "Filter shopping list from this date (format: DayName - DD/MM/YYYY)"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "Array of dates to include in shopping list (format: DD/MM/YYYY)"
             },
             "required": false,
-            "description": "Filter shopping list from this date (format: DayName - DD/MM/YYYY)",
-            "name": "startDate",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Filter shopping list until this date (format: DayName - DD/MM/YYYY)"
-            },
-            "required": false,
-            "description": "Filter shopping list until this date (format: DayName - DD/MM/YYYY)",
-            "name": "endDate",
+            "description": "Array of dates to include in shopping list (format: DD/MM/YYYY)",
+            "name": "dates",
             "in": "query"
           }
         ],
@@ -1456,9 +1461,56 @@
           "200": {
             "description": "Shopping list retrieved successfully",
             "content": {
-              "text/plain": {
+              "application/json": {
                 "schema": {
-                  "type": "string"
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "ingredient": {
+                        "type": "string",
+                        "description": "Name of the ingredient"
+                      },
+                      "quantities": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number",
+                              "description": "Quantity value"
+                            },
+                            "unit": {
+                              "type": "string",
+                              "description": "Unit of measurement"
+                            }
+                          },
+                          "required": [
+                            "unit"
+                          ]
+                        },
+                        "description": "Array of quantities with units"
+                      },
+                      "category": {
+                        "type": "string",
+                        "description": "Shopping category for the ingredient"
+                      },
+                      "meals": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "List of meals this ingredient belongs to"
+                      }
+                    },
+                    "required": [
+                      "ingredient",
+                      "quantities",
+                      "category",
+                      "meals"
+                    ]
+                  },
+                  "description": "Array of shopping list items with ingredient, quantity, and category"
                 }
               }
             }

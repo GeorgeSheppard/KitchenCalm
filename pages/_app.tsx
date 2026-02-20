@@ -1,19 +1,10 @@
 import "../styles/globals.css";
-import "../styles/global_card.css";
-import "../styles/scrollbar.css";
-import "../styles/utilities.css";
-import "../styles/padding.css";
-import 'tailwindcss/tailwind.css'
 import { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import * as React from "react";
-import Layout, { ILayoutProps } from "../components/core/layout";
-import { ThemeController } from "../components/core/theme";
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import { AppLayout } from "../components/app-layout";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { StyledEngineProvider } from "@mui/material/styles";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,8 +22,8 @@ const queryClient = new QueryClient({
 });
 
 export interface IKitchenCalmProps {
-  Component: React.JSXElementConstructor<ILayoutProps>;
-  pageProps: ILayoutProps & { session: Session };
+  Component: React.JSXElementConstructor<any>;
+  pageProps: any & { session: Session };
 }
 
 function KitchenCalm(props: IKitchenCalmProps) {
@@ -40,21 +31,15 @@ function KitchenCalm(props: IKitchenCalmProps) {
   const { session, ...pageProps } = props.pageProps;
 
   return (
-    <StyledEngineProvider injectFirst>
-      <QueryClientProvider client={queryClient}>
-        <ReactQueryDevtools initialIsOpen={false} />
-        <DndProvider backend={HTML5Backend}>
-          <ThemeController>
-            <SessionProvider session={session}>
-              <Layout>
-                <Component {...pageProps} />
-              </Layout>
-            </SessionProvider>
-          </ThemeController>
-        </DndProvider>
-      </QueryClientProvider>
-    </StyledEngineProvider>
+    <QueryClientProvider client={queryClient}>
+      <ReactQueryDevtools initialIsOpen={false} />
+      <SessionProvider session={session}>
+        <AppLayout>
+          <Component {...pageProps} />
+        </AppLayout>
+      </SessionProvider>
+    </QueryClientProvider>
   );
 }
 
-export default KitchenCalm
+export default KitchenCalm;

@@ -13,10 +13,10 @@ const useRecipesBase = <T>({
   enabled?: boolean;
   select?: (data: IRecipes) => T;
 }): UseQueryResult<T> => {
-  const { loading } = useAppSession();
+  const { loading, isAuthenticated } = useAppSession();
   const recipesQuery = useGetKitchencalmRecipes({
     query: {
-      enabled: !loading && (enabled ?? true),
+      enabled: !loading && isAuthenticated && (enabled ?? true),
     },
   });
 

@@ -1,6 +1,7 @@
 import { useRouter } from "next/router";
 import { v4 as uuidv4 } from "uuid";
 import { useRecipe } from "../../core/dynamo/hooks/use_dynamo_get";
+import { useAppSession } from "../../core/hooks/use_app_session";
 import { RecipeUuid } from "../../core/types/recipes";
 import { RecipeEditor } from "../../components/recipe-editor";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,8 +27,15 @@ const getDefaultRecipe = (uuid: string) => ({
 
 export default function RecipeForm() {
   const router = useRouter();
+  const session = useAppSession();
   const uuid = router.query.recipeUuid as RecipeUuid | undefined;
   const recipe = useRecipe(uuid);
+
+  // Redirect to home page if not authenticated
+  if (!session.loading && !session.isAuthenticated) {
+    router.push("/");
+    return null;
+  }
 
   if (!uuid) {
     return (

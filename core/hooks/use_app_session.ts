@@ -6,6 +6,7 @@ export const useAppSession = () => {
   return {
     id: (session.data as CustomSession)?.id,
     accessToken: (session.data as any)?.accessToken as string | undefined,
-    loading: session.status === "loading"
+    loading: session.status === "loading",
+    isAuthenticated: session.status === "authenticated"
   }
 };

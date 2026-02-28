@@ -3,11 +3,9 @@ import { RecipeGrid } from "../../components/recipe-grid";
 import { SharedRecipeBanner } from "../../components/shared-recipe-banner";
 import { useRecipeSearch } from "../../core/recipes/hooks/use_recipe_search";
 import { useSearchDebounce } from "../../core/hooks/use_search_debounce";
-import { useAppSession } from "../../core/hooks/use_app_session";
 import { IRecipe } from "../../core/types/recipes";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
 import { ParsedUrlQuery } from "querystring";
-import { useRouter } from "next/router";
 
 type SharedRecipeId = string;
 
@@ -51,14 +49,6 @@ const Recipes = (props: Props) => {
   const [searchString, debouncedValue, setSearchString] =
     useSearchDebounce("");
   const searchResults = useRecipeSearch(debouncedValue);
-  const session = useAppSession();
-  const router = useRouter();
-
-  // Redirect to home page if not authenticated
-  if (!session.loading && !session.isAuthenticated) {
-    router.push("/");
-    return null;
-  }
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">

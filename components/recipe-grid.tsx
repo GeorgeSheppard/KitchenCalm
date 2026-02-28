@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { IRecipe, RecipeUuid } from "../core/types/recipes";
 import { useRecipes } from "../core/dynamo/hooks/use_dynamo_get";
+import { useAppSession } from "../core/hooks/use_app_session";
 import { ConnectedRecipePreviewCard } from "./connected-recipe-preview-card";
 import { CreateRecipeCard } from "./create-recipe-card";
 import { RecipeDetailDialog } from "./recipe-detail-dialog";
 import { RecipePreviewCard } from "./recipe-preview-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { allRecipes } from "@/lib/recipe-data";
+import { signIn } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { LogIn } from "lucide-react";
 import type { Recipe } from "@/lib/recipe-data";
 
 interface RecipeGridProps {
@@ -15,6 +19,7 @@ interface RecipeGridProps {
 
 export function RecipeGrid({ recipeIds }: RecipeGridProps) {
   const { data: recipes, isLoading } = useRecipes();
+  const session = useAppSession();
   const [selectedRecipe, setSelectedRecipe] = useState<IRecipe | null>(null);
   const [selectedTestRecipe, setSelectedTestRecipe] = useState<Recipe | null>(
     null
@@ -35,6 +40,28 @@ export function RecipeGrid({ recipeIds }: RecipeGridProps) {
   };
 
   const hasRealRecipes = recipes && recipes.length > 0;
+
+  // Show empty state if not authenticated and session has finished loading
+  if (!session.loading && !session.isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-muted-foreground/25 bg-muted/50 px-4 py-12">
+        <div className="flex flex-col items-center gap-2">
+          <LogIn className="size-8 text-muted-foreground" />
+          <h3 className="text-lg font-semibold text-foreground">Sign in to view recipes</h3>
+          <p className="text-sm text-muted-foreground">
+            Create and manage your recipes after signing in.
+          </p>
+        </div>
+        <Button
+          onClick={() => signIn("cognito")}
+          size="sm"
+        >
+          <LogIn className="size-4 mr-2" />
+          Sign in
+        </Button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

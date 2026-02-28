@@ -23,6 +23,11 @@ export const useParsedRecipeToDynamo = () => {
         recipeId,
       });
 
+      // Log if images property is missing from the parsed recipe
+      if (!parsedRecipe.images) {
+        console.warn('Parsed recipe missing images property:', parsedRecipe.uuid);
+      }
+
       // Update the query cache with the parsed recipe
       const previousRecipes: IRecipes | undefined =
         queryClient.getQueryData(recipesKey);

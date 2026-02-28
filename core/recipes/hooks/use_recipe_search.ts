@@ -23,7 +23,7 @@ export const useRecipeSearch = (
     return (
       recipes
         ?.sort(
-          (recipeA, recipeB) => recipeB.images.length - recipeA.images.length
+          (recipeA, recipeB) => (recipeB.images?.length ?? 0) - (recipeA.images?.length ?? 0)
         )
         .map((recipe) => ({
           uuid: recipe.uuid,

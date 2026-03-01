@@ -101,14 +101,6 @@ export const useGetMealPlan = (
 };
 
 /**
- * Update recipe - Note: PUT recipes endpoint has been removed from the API
- * Use useParseRecipe to create recipes instead
- */
-export const useUpdateRecipe = () => {
-  throw new Error('useUpdateRecipe is no longer available. Use useParseRecipe instead.');
-};
-
-/**
  * Update meal plan - simplified interface
  */
 export const useUpdateMealPlan = () => {

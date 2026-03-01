@@ -6,7 +6,6 @@ import {
 import { IMealPlan } from "../../types/meal_plan";
 import { useAppSession } from "../../hooks/use_app_session";
 import {
-  useUpdateRecipe,
   useUpdateMealPlan,
   getRecipesQueryKey,
   getMealPlanQueryKey,

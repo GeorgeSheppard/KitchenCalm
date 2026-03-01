@@ -28,7 +28,7 @@ export function RecipeEditor({ recipe }: RecipeEditorProps) {
     setSaving(true);
     try {
       await parsedRecipe.mutateAsync(text, recipe.uuid);
-      router.push("/food");
+      await router.push("/food");
     } catch (error) {
       console.error("Error saving recipe:", error);
       setSaving(false);

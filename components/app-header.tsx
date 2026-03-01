@@ -3,13 +3,16 @@ import { useRouter } from "next/router";
 import { useAppSession } from "../core/hooks/use_app_session";
 import { signIn, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CreateMcpTokenButton } from "./create-mcp-token-button";
+import { useState } from "react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export function AppHeader() {
   const session = useAppSession();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   const navLinks = [
     { href: "/food", label: "Recipes" },
@@ -25,7 +28,8 @@ export function AppHeader() {
               KitchenCalm
             </span>
           </Link>
-          <nav className="flex items-center gap-1">
+          {/* Desktop navigation */}
+          <nav className="hidden sm:flex items-center gap-1">
             {navLinks.map((link) => {
               const isActive =
                 link.href === "/food"
@@ -48,10 +52,52 @@ export function AppHeader() {
             })}
           </nav>
         </div>
+
+        {/* Mobile menu */}
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="sm:hidden"
+            >
+              <Menu className="size-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right">
+            <nav className="flex flex-col gap-4 mt-6">
+              {navLinks.map((link) => {
+                const isActive =
+                  link.href === "/food"
+                    ? router.pathname === "/food"
+                    : router.pathname.startsWith(link.href);
+                return (
+                  <Link key={link.href} href={link.href} passHref>
+                    <span
+                      onClick={() => setOpen(false)}
+                      className={cn(
+                        "block text-sm px-3 py-2 rounded-md cursor-pointer transition-colors",
+                        isActive
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                      )}
+                    >
+                      {link.label}
+                    </span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </SheetContent>
+        </Sheet>
+
         <div className="flex items-center gap-1">
           {session.loading ? null : session.id ? (
             <>
-              <CreateMcpTokenButton />
+              {/* MCP Token button - hidden on mobile */}
+              <div className="hidden sm:block">
+                <CreateMcpTokenButton />
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
@@ -59,7 +105,7 @@ export function AppHeader() {
                 className="text-muted-foreground"
               >
                 <LogOut className="size-4 mr-2" />
-                Sign out
+                <span className="hidden sm:inline">Sign out</span>
               </Button>
             </>
           ) : (
@@ -70,7 +116,7 @@ export function AppHeader() {
               className="text-muted-foreground"
             >
               <LogIn className="size-4 mr-2" />
-              Sign in
+              <span className="hidden sm:inline">Sign in</span>
             </Button>
           )}
         </div>

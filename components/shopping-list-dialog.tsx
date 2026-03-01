@@ -26,10 +26,10 @@ function formatQuantity(
     return "";
   }
   if (qty.unit === "quantity") {
-    return qty.value !== undefined && qty.value !== null ? `${qty.value}` : "";
+    return qty.value !== undefined && qty.value !== null ? `${Number(qty.value).toFixed(2)}` : "";
   }
   if (qty.value !== undefined && qty.value !== null) {
-    return `${qty.value} ${qty.unit}`.trim();
+    return `${Number(qty.value).toFixed(2)} ${qty.unit}`.trim();
   }
   return qty.unit;
 }

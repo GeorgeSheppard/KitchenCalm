@@ -175,7 +175,7 @@ export function ConnectedMealPlanner() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <WeekNavigation
             weekStart={weekStart}
             onPreviousWeek={handlePreviousWeek}

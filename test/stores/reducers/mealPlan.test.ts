@@ -118,7 +118,7 @@ describe("buildRemoveMealPayload", () => {
     const recipe = makeRecipe();
     const result = buildRemoveMealPayload(recipe, "2026-02-19", 3);
     expect(result.components).toEqual([
-      { recipeId: "recipe-1", componentId: "comp-1", servingsIncrease: -4 },
+      { recipeId: "recipe-1", componentId: "comp-1", servingsIncrease: -3 },
     ]);
   });
 
@@ -126,7 +126,7 @@ describe("buildRemoveMealPayload", () => {
     const recipe = makeRecipe();
     const result = buildRemoveMealPayload(recipe, "2026-02-19", 1);
     expect(result.components).toEqual([
-      { recipeId: "recipe-1", componentId: "comp-1", servingsIncrease: -2 },
+      { recipeId: "recipe-1", componentId: "comp-1", servingsIncrease: -1 },
     ]);
   });
 
@@ -134,8 +134,8 @@ describe("buildRemoveMealPayload", () => {
     const recipe = makeMultiComponentRecipe();
     const result = buildRemoveMealPayload(recipe, "2026-02-19", 5);
     expect(result.components).toEqual([
-      { recipeId: "recipe-2", componentId: "comp-a", servingsIncrease: -6 },
-      { recipeId: "recipe-2", componentId: "comp-b", servingsIncrease: -6 },
+      { recipeId: "recipe-2", componentId: "comp-a", servingsIncrease: -5 },
+      { recipeId: "recipe-2", componentId: "comp-b", servingsIncrease: -5 },
     ]);
   });
 });

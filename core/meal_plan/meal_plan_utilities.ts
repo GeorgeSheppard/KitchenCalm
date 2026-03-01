@@ -182,7 +182,7 @@ export function buildRemoveMealPayload(
     components: recipe.components.map((c) => ({
       recipeId: recipe.uuid,
       componentId: c.uuid,
-      servingsIncrease: -(currentServings + 1),
+      servingsIncrease: -currentServings,
     })),
   };
 }

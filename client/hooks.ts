@@ -13,7 +13,6 @@ import {
   useGetKitchencalmMealPlan as useGetKitchencalmMealPlanBase,
   usePutKitchencalmMealPlan as usePutKitchencalmMealPlanBase,
   useDeleteKitchencalmRecipesUuid as useDeleteKitchencalmRecipesUuidBase,
-  usePostKitchencalmRecipesShare as usePostKitchencalmRecipesShareBase,
   usePostKitchencalmS3SignedUrl as usePostKitchencalmS3SignedUrlBase,
   usePostKitchencalmS3Upload as usePostKitchencalmS3UploadBase,
   usePostKitchencalmS3Delete as usePostKitchencalmS3DeleteBase,
@@ -21,14 +20,12 @@ import {
   getGetKitchencalmRecipesQueryKey,
   getGetKitchencalmMealPlanQueryKey,
   MealPlan,
-  PostKitchencalmRecipesShareBody,
   PostKitchencalmS3SignedUrlBody,
   PostKitchencalmS3UploadBody,
   PostKitchencalmS3DeleteBody,
   PostKitchencalmParseRecipeBody,
   PutKitchencalmMealPlan200,
   DeleteKitchencalmRecipesUuid200,
-  PostKitchencalmRecipesShare200,
   PostKitchencalmS3SignedUrl200,
   PostKitchencalmS3Upload200,
   PostKitchencalmS3Delete200,
@@ -137,24 +134,6 @@ export const useDeleteRecipe = () => {
     },
     mutateAsync: async (uuid: string) => {
       const response = await mutation.mutateAsync({ uuid });
-      return response.data;
-    },
-  };
-};
-
-/**
- * Share recipe - simplified interface
- */
-export const useShareRecipe = () => {
-  const { accessToken } = useAppSession();
-  const mutation = usePostKitchencalmRecipesShareBase({
-    axios: { headers: getAuthHeaders(accessToken) },
-  });
-
-  return {
-    ...mutation,
-    mutateAsync: async (recipe: IRecipe) => {
-      const response = await mutation.mutateAsync({ data: { recipe } });
       return response.data;
     },
   };

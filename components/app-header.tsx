@@ -3,16 +3,13 @@ import { useRouter } from "next/router";
 import { useAppSession } from "../core/hooks/use_app_session";
 import { signIn, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { LogIn, LogOut, Menu } from "lucide-react";
+import { LogIn, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CreateMcpTokenButton } from "./create-mcp-token-button";
-import { useState } from "react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export function AppHeader() {
   const session = useAppSession();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
 
   const navLinks = [
     { href: "/food", label: "Recipes" },
@@ -21,15 +18,46 @@ export function AppHeader() {
 
   return (
     <header className="border-b border-border bg-card">
+      {/* First row: Logo and Auth buttons */}
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <div className="flex items-center gap-6">
-          <Link href="/food" passHref>
-            <span className="font-serif text-xl text-primary cursor-pointer">
-              KitchenCalm
-            </span>
-          </Link>
-          {/* Desktop navigation */}
-          <nav className="hidden sm:flex items-center gap-1">
+        <Link href="/food" passHref>
+          <span className="font-serif text-xl text-primary cursor-pointer">
+            KitchenCalm
+          </span>
+        </Link>
+
+        <div className="flex items-center gap-1">
+          {session.loading ? null : session.id ? (
+            <>
+              <CreateMcpTokenButton />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => signOut()}
+                className="text-muted-foreground"
+              >
+                <LogOut className="size-4 mr-2" />
+                Sign out
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => signIn("cognito")}
+              className="text-muted-foreground"
+            >
+              <LogIn className="size-4 mr-2" />
+              Sign in
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Second row: Navigation */}
+      <div className="border-t border-border">
+        <div className="mx-auto flex max-w-7xl px-4 sm:px-6">
+          <nav className="flex items-center gap-1">
             {navLinks.map((link) => {
               const isActive =
                 link.href === "/food"
@@ -39,7 +67,7 @@ export function AppHeader() {
                 <Link key={link.href} href={link.href} passHref>
                   <span
                     className={cn(
-                      "text-sm px-3 py-1.5 rounded-md cursor-pointer transition-colors",
+                      "text-sm px-3 py-2 rounded-md cursor-pointer transition-colors",
                       isActive
                         ? "bg-primary/10 text-primary font-medium"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent"
@@ -51,74 +79,6 @@ export function AppHeader() {
               );
             })}
           </nav>
-        </div>
-
-        {/* Mobile menu */}
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="sm:hidden"
-            >
-              <Menu className="size-4" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right">
-            <nav className="flex flex-col gap-4 mt-6">
-              {navLinks.map((link) => {
-                const isActive =
-                  link.href === "/food"
-                    ? router.pathname === "/food"
-                    : router.pathname.startsWith(link.href);
-                return (
-                  <Link key={link.href} href={link.href} passHref>
-                    <span
-                      onClick={() => setOpen(false)}
-                      className={cn(
-                        "block text-sm px-3 py-2 rounded-md cursor-pointer transition-colors",
-                        isActive
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                      )}
-                    >
-                      {link.label}
-                    </span>
-                  </Link>
-                );
-              })}
-            </nav>
-          </SheetContent>
-        </Sheet>
-
-        <div className="flex items-center gap-1">
-          {session.loading ? null : session.id ? (
-            <>
-              {/* MCP Token button - hidden on mobile */}
-              <div className="hidden sm:block">
-                <CreateMcpTokenButton />
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => signOut()}
-                className="text-muted-foreground"
-              >
-                <LogOut className="size-4 mr-2" />
-                <span className="hidden sm:inline">Sign out</span>
-              </Button>
-            </>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => signIn("cognito")}
-              className="text-muted-foreground"
-            >
-              <LogIn className="size-4 mr-2" />
-              <span className="hidden sm:inline">Sign in</span>
-            </Button>
-          )}
         </div>
       </div>
     </header>

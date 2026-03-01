@@ -55,14 +55,18 @@ const useMutateMealPlanInCache = () => {
 export const usePutRecipeToDynamo = () => {
   const { loading } = useAppSession();
   const mutate = useMutateRecipeInCache();
-  const updateRecipe = useUpdateRecipe();
 
   return {
-    ...updateRecipe,
+    isLoading: false,
     mutateAsync: async (recipe: IRecipe) => {
       const context = mutate(recipe);
       try {
-        return await updateRecipe.mutateAsync(recipe);
+        // Note: The PUT recipes endpoint has been removed from the API.
+        // Recipe updates should use the parseRecipe endpoint instead.
+        throw new Error(
+          'usePutRecipeToDynamo is no longer available. ' +
+          'To add a downloaded recipe, use useParseRecipe instead.'
+        );
       } catch (error) {
         context.undo();
         throw error;

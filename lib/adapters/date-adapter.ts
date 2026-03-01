@@ -1,5 +1,3 @@
-import { DateString } from "../../core/types/meal_plan";
-
 const WEEKDAYS = [
   "Sunday",
   "Monday",
@@ -12,8 +10,9 @@ const WEEKDAYS = [
 
 /**
  * Parse "Monday - 17/2/2026" to a Date object
+ * @deprecated This function is no longer used with the new timestamp-based meal plan schema
  */
-export function parseDateString(dateStr: DateString): Date {
+export function parseDateString(dateStr: string): Date {
   const parts = dateStr.split(" - ");
   if (parts.length < 2) return new Date();
   const [day, month, year] = parts[1].split("/").map(Number);
@@ -22,8 +21,9 @@ export function parseDateString(dateStr: DateString): Date {
 
 /**
  * Convert "Monday - 17/2/2026" to "2026-02-17"
+ * @deprecated This function is no longer used with the new timestamp-based meal plan schema
  */
-export function dateStringToIso(dateStr: DateString): string {
+export function dateStringToIso(dateStr: string): string {
   const date = parseDateString(dateStr);
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -33,8 +33,9 @@ export function dateStringToIso(dateStr: DateString): string {
 
 /**
  * Convert "2026-02-17" to "Monday - 17/2/2026"
+ * @deprecated This function is no longer used with the new timestamp-based meal plan schema
  */
-export function isoToDateString(iso: string): DateString {
+export function isoToDateString(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
   const date = new Date(y, m - 1, d, 12, 0, 0);
   const weekday = WEEKDAYS[date.getDay()];

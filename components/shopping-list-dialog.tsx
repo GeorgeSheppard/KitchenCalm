@@ -68,10 +68,10 @@ export function ShoppingListDialog({ selectedDates }: ShoppingListDialogProps) {
   >(null);
   const [copied, setCopied] = useState(false);
 
-  // Convert selected ISO dates (YYYY-MM-DD) to backend format (D/M/YYYY)
+  // Convert selected ISO dates (YYYY-MM-DD) to Unix timestamps (milliseconds)
   const dates = Array.from(selectedDates).map((iso) => {
-    const [y, m, d] = iso.split("-");
-    return `${Number(d)}/${Number(m)}/${y}`;
+    const date = new Date(`${iso}T00:00:00Z`);
+    return String(date.getTime());
   });
 
   const { accessToken } = useAppSession();

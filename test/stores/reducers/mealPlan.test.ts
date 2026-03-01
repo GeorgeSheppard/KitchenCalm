@@ -4,6 +4,7 @@ import {
   buildUpdateServingsPayload,
   buildRemoveMealPayload,
   buildDropPayload,
+  isoToTimestamp,
 } from "../../../core/meal_plan/meal_plan_utilities";
 import { IRecipe, Unit } from "../../../core/types/recipes";
 
@@ -103,11 +104,10 @@ describe("buildUpdateServingsPayload", () => {
     ]);
   });
 
-  test("converts ISO date to DateString format", () => {
+  test("converts ISO date to Unix timestamp", () => {
     const recipe = makeRecipe();
-    // 2026-02-19 is a Thursday
     const result = buildUpdateServingsPayload(recipe, "2026-02-19", 1, 2);
-    expect(result.date).toBe("Thursday - 19/02/2026");
+    expect(result.timestamp).toBe(isoToTimestamp("2026-02-19"));
   });
 });
 
@@ -176,33 +176,36 @@ describe("buildDropPayload", () => {
 // ── addOrUpdatePlan ──
 
 describe("addOrUpdatePlan", () => {
+  const ts1 = isoToTimestamp("2022-07-16");
+  const ts2 = isoToTimestamp("2022-07-17");
+
   test("can add a recipe", () => {
     expect(
       addOrUpdatePlan(
-        [{ date: "16/7/2022", plan: {} }],
+        [{ date: ts1, plan: [] }],
         {
-          date: "16/7/2022",
+          timestamp: ts1,
           components: [{ recipeId: "11", componentId: "1", servingsIncrease: 3 }],
         }
       )
     ).toStrictEqual([
-      { date: "16/7/2022", plan: { "11": [{ componentId: "1", servings: 3 }] } },
+      { date: ts1, plan: [{ recipeId: "11", components: [{ componentId: "1", servings: 3 }] }] },
     ]);
   });
 
   test("can reduce serving quantity on existing recipe", () => {
     expect(
       addOrUpdatePlan(
-        [{ date: "16/7/2022", plan: { "11": [{ componentId: "1", servings: 3 }] } }],
+        [{ date: ts1, plan: [{ recipeId: "11", components: [{ componentId: "1", servings: 3 }] }] }],
         {
-          date: "16/7/2022",
+          timestamp: ts1,
           components: [
             { recipeId: "11", componentId: "1", servingsIncrease: -1 },
           ],
         }
       )
     ).toStrictEqual([
-      { date: "16/7/2022", plan: { "11": [{ componentId: "1", servings: 2 }] } },
+      { date: ts1, plan: [{ recipeId: "11", components: [{ componentId: "1", servings: 2 }] }] },
     ]);
   });
 
@@ -211,15 +214,15 @@ describe("addOrUpdatePlan", () => {
       addOrUpdatePlan(
         [
           {
-            date: "16/7/2022",
-            plan: {
-              "11": [{ componentId: "1", servings: 2 }],
-              "22": [{ componentId: "2", servings: 3 }],
-            },
+            date: ts1,
+            plan: [
+              { recipeId: "11", components: [{ componentId: "1", servings: 2 }] },
+              { recipeId: "22", components: [{ componentId: "2", servings: 3 }] },
+            ],
           },
         ],
         {
-          date: "16/7/2022",
+          timestamp: ts1,
           components: [
             {
               recipeId: "22",
@@ -231,11 +234,11 @@ describe("addOrUpdatePlan", () => {
       )
     ).toStrictEqual([
       {
-        date: "16/7/2022",
-        plan: {
-          "11": [{ componentId: "1", servings: 2 }],
-          "22": [{ componentId: "2", servings: 2 }],
-        },
+        date: ts1,
+        plan: [
+          { recipeId: "11", components: [{ componentId: "1", servings: 2 }] },
+          { recipeId: "22", components: [{ componentId: "2", servings: 2 }] },
+        ],
       },
     ]);
   });
@@ -245,17 +248,20 @@ describe("addOrUpdatePlan", () => {
       addOrUpdatePlan(
         [
           {
-            date: "16/7/2022",
-            plan: {
-              "11": [
-                { componentId: "1", servings: 2 },
-                { componentId: "2", servings: 4 },
-              ],
-            },
+            date: ts1,
+            plan: [
+              {
+                recipeId: "11",
+                components: [
+                  { componentId: "1", servings: 2 },
+                  { componentId: "2", servings: 4 },
+                ],
+              },
+            ],
           },
         ],
         {
-          date: "16/7/2022",
+          timestamp: ts1,
           components: [
             { recipeId: "11", componentId: "2", servingsIncrease: -1 },
           ],
@@ -263,13 +269,16 @@ describe("addOrUpdatePlan", () => {
       )
     ).toStrictEqual([
       {
-        date: "16/7/2022",
-        plan: {
-          "11": [
-            { componentId: "1", servings: 2 },
-            { componentId: "2", servings: 3 },
-          ],
-        },
+        date: ts1,
+        plan: [
+          {
+            recipeId: "11",
+            components: [
+              { componentId: "1", servings: 2 },
+              { componentId: "2", servings: 3 },
+            ],
+          },
+        ],
       },
     ]);
   });
@@ -279,21 +288,27 @@ describe("addOrUpdatePlan", () => {
       addOrUpdatePlan(
         [
           {
-            date: "16/7/2022",
-            plan: {
-              "11": [
-                { componentId: "1", servings: 2 },
-                { componentId: "2", servings: 4 },
-              ],
-              "22": [
-                { componentId: "3", servings: 6 },
-                { componentId: "4", servings: 8 },
-              ],
-            },
+            date: ts1,
+            plan: [
+              {
+                recipeId: "11",
+                components: [
+                  { componentId: "1", servings: 2 },
+                  { componentId: "2", servings: 4 },
+                ],
+              },
+              {
+                recipeId: "22",
+                components: [
+                  { componentId: "3", servings: 6 },
+                  { componentId: "4", servings: 8 },
+                ],
+              },
+            ],
           },
         ],
         {
-          date: "16/7/2022",
+          timestamp: ts1,
           components: [
             { recipeId: "22", componentId: "4", servingsIncrease: -2 },
             {
@@ -306,17 +321,23 @@ describe("addOrUpdatePlan", () => {
       )
     ).toStrictEqual([
       {
-        date: "16/7/2022",
-        plan: {
-          "11": [
-            { componentId: "1", servings: 2 },
-            { componentId: "2", servings: 2 },
-          ],
-          "22": [
-            { componentId: "3", servings: 6 },
-            { componentId: "4", servings: 6 },
-          ],
-        },
+        date: ts1,
+        plan: [
+          {
+            recipeId: "11",
+            components: [
+              { componentId: "1", servings: 2 },
+              { componentId: "2", servings: 2 },
+            ],
+          },
+          {
+            recipeId: "22",
+            components: [
+              { componentId: "3", servings: 6 },
+              { componentId: "4", servings: 6 },
+            ],
+          },
+        ],
       },
     ]);
   });
@@ -324,81 +345,81 @@ describe("addOrUpdatePlan", () => {
   test("allows servings to reach zero", () => {
     expect(
       addOrUpdatePlan(
-        [{ date: "d1", plan: { r1: [{ componentId: "c1", servings: 1 }] } }],
-        { date: "d1", components: [{ recipeId: "r1", componentId: "c1", servingsIncrease: -1 }] }
+        [{ date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 1 }] }] }],
+        { timestamp: ts1, components: [{ recipeId: "r1", componentId: "c1", servingsIncrease: -1 }] }
       )
     ).toStrictEqual([
-      { date: "d1", plan: { r1: [{ componentId: "c1", servings: 0 }] } },
+      { date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 0 }] }] },
     ]);
   });
 
   test("removes component when servings go below zero", () => {
     expect(
       addOrUpdatePlan(
-        [{ date: "d1", plan: { r1: [{ componentId: "c1", servings: 1 }] } }],
-        { date: "d1", components: [{ recipeId: "r1", componentId: "c1", servingsIncrease: -2 }] }
+        [{ date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 1 }] }] }],
+        { timestamp: ts1, components: [{ recipeId: "r1", componentId: "c1", servingsIncrease: -2 }] }
       )
     ).toStrictEqual([
-      { date: "d1", plan: {} },
+      { date: ts1, plan: [] },
     ]);
   });
 
-  test("removes recipe key when all components removed", () => {
+  test("removes recipe when all components removed", () => {
     expect(
       addOrUpdatePlan(
-        [{ date: "d1", plan: { r1: [{ componentId: "c1", servings: 0 }, { componentId: "c2", servings: 0 }] } }],
-        { date: "d1", components: [
+        [{ date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 0 }, { componentId: "c2", servings: 0 }] }] }],
+        { timestamp: ts1, components: [
           { recipeId: "r1", componentId: "c1", servingsIncrease: -1 },
           { recipeId: "r1", componentId: "c2", servingsIncrease: -1 },
         ] }
       )
     ).toStrictEqual([
-      { date: "d1", plan: {} },
+      { date: ts1, plan: [] },
     ]);
   });
 
-  test("returns plan unchanged when date not found", () => {
-    const plan = [{ date: "d1", plan: { r1: [{ componentId: "c1", servings: 2 }] } }];
+  test("returns plan unchanged when timestamp not found", () => {
+    const plan = [{ date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 2 }] }] }];
     expect(
       addOrUpdatePlan(plan, {
-        date: "d2",
+        timestamp: ts2,
         components: [{ recipeId: "r1", componentId: "c1", servingsIncrease: 1 }],
       })
     ).toStrictEqual(plan);
   });
 
   test("does not mutate the original plan", () => {
-    const original = [{ date: "d1", plan: { r1: [{ componentId: "c1", servings: 2 }] } }];
+    const original = [{ date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 2 }] }] }];
     addOrUpdatePlan(original, {
-      date: "d1",
+      timestamp: ts1,
       components: [{ recipeId: "r1", componentId: "c1", servingsIncrease: 1 }],
     });
-    expect(original[0].plan.r1[0].servings).toBe(2);
+    expect(original[0].plan[0].components[0].servings).toBe(2);
   });
 
   test("preserves other dates in the plan", () => {
     expect(
       addOrUpdatePlan(
         [
-          { date: "d1", plan: { r1: [{ componentId: "c1", servings: 1 }] } },
-          { date: "d2", plan: { r2: [{ componentId: "c2", servings: 5 }] } },
+          { date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 1 }] }] },
+          { date: ts2, plan: [{ recipeId: "r2", components: [{ componentId: "c2", servings: 5 }] }] },
         ],
-        { date: "d1", components: [{ recipeId: "r1", componentId: "c1", servingsIncrease: 2 }] }
+        { timestamp: ts1, components: [{ recipeId: "r1", componentId: "c1", servingsIncrease: 2 }] }
       )
     ).toStrictEqual([
-      { date: "d1", plan: { r1: [{ componentId: "c1", servings: 3 }] } },
-      { date: "d2", plan: { r2: [{ componentId: "c2", servings: 5 }] } },
+      { date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 3 }] }] },
+      { date: ts2, plan: [{ recipeId: "r2", components: [{ componentId: "c2", servings: 5 }] }] },
     ]);
   });
 
   test("adds a new component to an existing recipe", () => {
     expect(
       addOrUpdatePlan(
-        [{ date: "d1", plan: { r1: [{ componentId: "c1", servings: 2 }] } }],
-        { date: "d1", components: [{ recipeId: "r1", componentId: "c2", servingsIncrease: 3 }] }
+        [{ date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 2 }] }] }],
+        { timestamp: ts1, components: [{ recipeId: "r1", componentId: "c2", servingsIncrease: 3 }] }
       )
     ).toStrictEqual([
-      { date: "d1", plan: { r1: [{ componentId: "c1", servings: 2 }, { componentId: "c2", servings: 3 }] } },
+      { date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 2 }, { componentId: "c2", servings: 3 }] }] },
     ]);
   });
 });

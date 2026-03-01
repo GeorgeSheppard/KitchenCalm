@@ -20,6 +20,7 @@ import {
   buildUpdateServingsPayload,
   buildRemoveMealPayload,
   buildDropPayload,
+  isoToTimestamp,
 } from "../core/meal_plan/meal_plan_utilities";
 import type { Recipe } from "@/lib/recipe-data";
 import type { MealType } from "@/lib/meal-planner-data";
@@ -156,6 +157,26 @@ export function ConnectedMealPlanner() {
     [recipes, weekMeals, putMealPlan]
   );
 
+  const handleUpdateComponentServings = useCallback(
+    (id: string, componentId: string, newServings: number) => {
+      const { isoDate, recipeId } = parseMealId(id);
+      const currentMeal = weekMeals.find((m) => m.id === id);
+      if (!currentMeal) return;
+      const component = currentMeal.components.find((c) => c.componentId === componentId);
+      if (!component) return;
+      const delta = newServings - component.servings;
+      putMealPlan.mutate({
+        timestamp: isoToTimestamp(isoDate),
+        components: [{
+          recipeId,
+          componentId,
+          servingsIncrease: delta,
+        }],
+      });
+    },
+    [weekMeals, putMealPlan]
+  );
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -201,6 +222,7 @@ export function ConnectedMealPlanner() {
             onToggleDate={handleToggleDate}
             onDrop={handleDrop}
             onUpdateServings={handleUpdateServings}
+            onUpdateComponentServings={handleUpdateComponentServings}
             onRemoveMeal={handleRemoveMeal}
           />
         </div>
@@ -216,6 +238,7 @@ export function ConnectedMealPlanner() {
           onToggleDate={handleToggleDate}
           onDrop={handleDrop}
           onUpdateServings={handleUpdateServings}
+          onUpdateComponentServings={handleUpdateComponentServings}
           onRemoveMeal={handleRemoveMeal}
         />
       </div>

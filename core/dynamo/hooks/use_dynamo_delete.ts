@@ -17,9 +17,9 @@ const useDeleteRecipeInCache = () => {
       queryClient.getQueryData(mealPlanKey);
 
     if (previousRecipes) {
-      const updatedRecipes = new Map(previousRecipes);
+      const updatedRecipes = new Map(Object.entries(previousRecipes));
       updatedRecipes.delete(recipeId);
-      queryClient.setQueryData(recipesKey, updatedRecipes);
+      queryClient.setQueryData(recipesKey, Object.fromEntries(updatedRecipes));
     }
 
     if (previousMealPlan) {

@@ -21,9 +21,9 @@ const useMutateRecipeInCache = () => {
       queryClient.getQueryData(recipesKey);
 
     if (previousRecipes) {
-      const updatedRecipes = new Map(previousRecipes);
+      const updatedRecipes = new Map(Object.entries(previousRecipes));
       updatedRecipes.set(recipe.uuid, recipe);
-      queryClient.setQueryData(recipesKey, updatedRecipes);
+      queryClient.setQueryData(recipesKey, Object.fromEntries(updatedRecipes));
     }
 
     return {

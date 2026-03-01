@@ -33,7 +33,7 @@ export const useParsedRecipeToDynamo = () => {
         queryClient.getQueryData(recipesKey);
 
       if (previousRecipes) {
-        const updatedRecipes = new Map(previousRecipes);
+        const updatedRecipes = new Map(Object.entries(previousRecipes));
         // Use the recipeId if provided (editing), otherwise use the parsed UUID (new recipe)
         const recipeUuid = recipeId || parsedRecipe.uuid;
         updatedRecipes.set(recipeUuid, parsedRecipe as any);

@@ -115,21 +115,25 @@ export const addOrUpdatePlan = (
           }
         }
       } else {
-        recipe.components.push({
-          componentId,
-          servings: servingsIncrease,
-        });
-      }
-    } else {
-      dateItem.plan.push({
-        recipeId,
-        components: [
-          {
+        if (servingsIncrease >= 0) {
+          recipe.components.push({
             componentId,
             servings: servingsIncrease,
-          },
-        ],
-      });
+          });
+        }
+      }
+    } else {
+      if (servingsIncrease >= 0) {
+        dateItem.plan.push({
+          recipeId,
+          components: [
+            {
+              componentId,
+              servings: servingsIncrease,
+            },
+          ],
+        });
+      }
     }
   }
 
@@ -149,6 +153,9 @@ export function parseMealId(id: string): { isoDate: string; recipeId: RecipeUuid
 
 /**
  * Build an IAddOrUpdatePlan to change servings for a recipe on a given date.
+ *
+ * For multi-component recipes, distribute the delta equally across all components
+ * to prevent any single component from going negative when reducing servings.
  */
 export function buildUpdateServingsPayload(
   recipe: IRecipe,
@@ -157,15 +164,16 @@ export function buildUpdateServingsPayload(
   newServings: number,
 ): IAddOrUpdatePlan {
   const delta = newServings - currentServings;
-  // Apply the delta to only the first component, since the UI displays
-  // the sum across all components as a single number.
+  const componentCount = recipe.components.length;
+  const deltaPerComponent = componentCount > 0 ? delta / componentCount : delta;
+
   return {
     timestamp: isoToTimestamp(isoDate),
-    components: [{
+    components: recipe.components.map((c) => ({
       recipeId: recipe.uuid,
-      componentId: recipe.components[0].uuid,
-      servingsIncrease: delta,
-    }],
+      componentId: c.uuid,
+      servingsIncrease: deltaPerComponent,
+    })),
   };
 }
 

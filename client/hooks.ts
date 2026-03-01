@@ -11,7 +11,6 @@ import { IRecipe } from '../core/types/recipes';
 import {
   useGetKitchencalmRecipes as useGetKitchencalmRecipesBase,
   useGetKitchencalmMealPlan as useGetKitchencalmMealPlanBase,
-  usePutKitchencalmRecipes as usePutKitchencalmRecipesBase,
   usePutKitchencalmMealPlan as usePutKitchencalmMealPlanBase,
   useDeleteKitchencalmRecipesUuid as useDeleteKitchencalmRecipesUuidBase,
   usePostKitchencalmRecipesShare as usePostKitchencalmRecipesShareBase,
@@ -21,14 +20,12 @@ import {
   usePostKitchencalmParseRecipe as usePostKitchencalmParseRecipeBase,
   getGetKitchencalmRecipesQueryKey,
   getGetKitchencalmMealPlanQueryKey,
-  PutKitchencalmRecipesBody,
-  PutKitchencalmMealPlanBodyItem,
+  MealPlan,
   PostKitchencalmRecipesShareBody,
   PostKitchencalmS3SignedUrlBody,
   PostKitchencalmS3UploadBody,
   PostKitchencalmS3DeleteBody,
   PostKitchencalmParseRecipeBody,
-  PutKitchencalmRecipes200,
   PutKitchencalmMealPlan200,
   DeleteKitchencalmRecipesUuid200,
   PostKitchencalmRecipesShare200,
@@ -104,27 +101,6 @@ export const useGetMealPlan = (
 };
 
 /**
- * Update recipe - simplified interface
- */
-export const useUpdateRecipe = () => {
-  const { accessToken } = useAppSession();
-  const mutation = usePutKitchencalmRecipesBase({
-    axios: { headers: getAuthHeaders(accessToken) },
-  });
-
-  return {
-    ...mutation,
-    mutate: (recipe: PutKitchencalmRecipesBody) => {
-      mutation.mutate({ data: recipe });
-    },
-    mutateAsync: async (recipe: PutKitchencalmRecipesBody) => {
-      const response = await mutation.mutateAsync({ data: recipe });
-      return response.data;
-    },
-  };
-};
-
-/**
  * Update meal plan - simplified interface
  */
 export const useUpdateMealPlan = () => {
@@ -135,10 +111,10 @@ export const useUpdateMealPlan = () => {
 
   return {
     ...mutation,
-    mutate: (mealPlan: PutKitchencalmMealPlanBodyItem[]) => {
+    mutate: (mealPlan: MealPlan) => {
       mutation.mutate({ data: mealPlan });
     },
-    mutateAsync: async (mealPlan: PutKitchencalmMealPlanBodyItem[]) => {
+    mutateAsync: async (mealPlan: MealPlan) => {
       const response = await mutation.mutateAsync({ data: mealPlan });
       return response.data;
     },

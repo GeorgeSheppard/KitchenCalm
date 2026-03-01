@@ -6,7 +6,6 @@ import {
 import { IMealPlan } from "../../types/meal_plan";
 import { useAppSession } from "../../hooks/use_app_session";
 import {
-  useUpdateRecipe,
   useUpdateMealPlan,
   getRecipesQueryKey,
   getMealPlanQueryKey,
@@ -49,26 +48,6 @@ const useMutateMealPlanInCache = () => {
         queryClient.setQueryData(mealPlanKey, previousMealPlan)
       },
     };
-  };
-};
-
-export const usePutRecipeToDynamo = () => {
-  const { loading } = useAppSession();
-  const mutate = useMutateRecipeInCache();
-  const updateRecipe = useUpdateRecipe();
-
-  return {
-    ...updateRecipe,
-    mutateAsync: async (recipe: IRecipe) => {
-      const context = mutate(recipe);
-      try {
-        return await updateRecipe.mutateAsync(recipe);
-      } catch (error) {
-        context.undo();
-        throw error;
-      }
-    },
-    disabled: loading,
   };
 };
 

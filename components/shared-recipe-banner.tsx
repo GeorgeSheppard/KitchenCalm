@@ -1,5 +1,4 @@
 import { IRecipe } from "../core/types/recipes";
-import { usePutRecipeToDynamo } from "../core/dynamo/hooks/use_dynamo_put";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Download } from "lucide-react";
@@ -11,15 +10,6 @@ interface SharedRecipeBannerProps {
 
 export function SharedRecipeBanner({ recipe }: SharedRecipeBannerProps) {
   const session = useAppSession();
-  const putRecipe = usePutRecipeToDynamo();
-
-  const handleAdd = async () => {
-    try {
-      await putRecipe.mutateAsync(recipe);
-    } catch {
-      // error handling via react-query
-    }
-  };
 
   return (
     <Card className="border-primary/30 bg-primary/5 p-4">
@@ -33,9 +23,9 @@ export function SharedRecipeBanner({ recipe }: SharedRecipeBannerProps) {
           </p>
         </div>
         <Button
-          onClick={handleAdd}
-          disabled={session.loading || !session.id || putRecipe.isLoading}
+          disabled={true}
           size="sm"
+          title="Add to My Recipes feature is temporarily unavailable"
         >
           <Download className="size-4 mr-2" />
           Add to My Recipes

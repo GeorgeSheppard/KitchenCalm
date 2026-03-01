@@ -25,7 +25,8 @@ const useDeleteRecipeInCache = () => {
     if (previousMealPlan) {
       const updatedMealPlan = clone(previousMealPlan);
       for (const mealPlanItem of updatedMealPlan) {
-        delete mealPlanItem.plan[recipeId];
+        // Remove the recipe from the plan array
+        mealPlanItem.plan = mealPlanItem.plan.filter((r) => r.recipeId !== recipeId);
       }
       queryClient.setQueryData(mealPlanKey, updatedMealPlan);
     }

@@ -11,6 +11,11 @@ export const testPlannedMeals: PlannedMeal[] = [
     mealType: "dinner",
     date: format(addDays(weekStart, 0), "yyyy-MM-dd"), // Monday
     servings: 4,
+    components: allRecipes[0].parts.map((part, idx) => ({
+      componentId: `part-${idx}`,
+      name: part.title,
+      servings: 4,
+    })),
   },
   {
     id: "test-2",
@@ -18,6 +23,11 @@ export const testPlannedMeals: PlannedMeal[] = [
     mealType: "dinner",
     date: format(addDays(weekStart, 1), "yyyy-MM-dd"), // Tuesday
     servings: 2,
+    components: allRecipes[1].parts.map((part, idx) => ({
+      componentId: `part-${idx}`,
+      name: part.title,
+      servings: 2,
+    })),
   },
   {
     id: "test-3",
@@ -25,6 +35,11 @@ export const testPlannedMeals: PlannedMeal[] = [
     mealType: "dinner",
     date: format(addDays(weekStart, 3), "yyyy-MM-dd"), // Thursday
     servings: 4,
+    components: allRecipes[3].parts.map((part, idx) => ({
+      componentId: `part-${idx}`,
+      name: part.title,
+      servings: 4,
+    })),
   },
   {
     id: "test-4",
@@ -32,5 +47,10 @@ export const testPlannedMeals: PlannedMeal[] = [
     mealType: "dinner",
     date: format(addDays(weekStart, 5), "yyyy-MM-dd"), // Saturday
     servings: 2,
+    components: allRecipes[4].parts.map((part, idx) => ({
+      componentId: `part-${idx}`,
+      name: part.title,
+      servings: 2,
+    })),
   },
 ];

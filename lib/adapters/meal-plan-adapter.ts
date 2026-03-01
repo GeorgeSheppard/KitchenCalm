@@ -46,12 +46,25 @@ export function mealPlanToPlannedMeals(
         0
       );
 
+      // Map component data including names from IRecipe
+      const components = recipeItem.components.map((comp) => {
+        const componentDef = iRecipe.components.find(
+          (c) => c.uuid === comp.componentId
+        );
+        return {
+          componentId: comp.componentId,
+          name: componentDef?.name || "Component",
+          servings: comp.servings,
+        };
+      });
+
       meals.push({
         id: `${isoDate}-${recipeItem.recipeId}`,
         recipe: v0Recipe,
         mealType: "dinner",
         date: isoDate,
         servings: totalServings || parseServingsNumber(v0Recipe.servings),
+        components,
       });
     }
   }

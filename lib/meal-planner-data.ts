@@ -2,12 +2,19 @@ import type { Recipe } from "./recipe-data"
 
 export type MealType = "breakfast" | "lunch" | "dinner" | "snack"
 
+export interface MealComponent {
+  componentId: string
+  name: string
+  servings: number
+}
+
 export interface PlannedMeal {
   id: string
   recipe: Recipe
   mealType: MealType
   date: string // ISO date string "2026-02-18"
   servings: number
+  components: MealComponent[]
 }
 
 export const MEAL_TYPES: MealType[] = ["breakfast", "lunch", "dinner", "snack"]

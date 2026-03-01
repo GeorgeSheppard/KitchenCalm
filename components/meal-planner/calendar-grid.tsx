@@ -15,6 +15,7 @@ interface CalendarGridProps {
   onToggleDate: (dateStr: string) => void
   onDrop: (recipe: Recipe, date: string, mealType: MealType) => void
   onUpdateServings: (id: string, servings: number) => void
+  onUpdateComponentServings: (id: string, componentId: string, servings: number) => void
   onRemoveMeal: (id: string) => void
 }
 
@@ -62,6 +63,7 @@ function DesktopDayColumn({
   onToggleDate,
   onDrop,
   onUpdateServings,
+  onUpdateComponentServings,
   onRemoveMeal,
 }: {
   day: Date
@@ -70,6 +72,7 @@ function DesktopDayColumn({
   onToggleDate: (dateStr: string) => void
   onDrop: CalendarGridProps["onDrop"]
   onUpdateServings: CalendarGridProps["onUpdateServings"]
+  onUpdateComponentServings: CalendarGridProps["onUpdateComponentServings"]
   onRemoveMeal: CalendarGridProps["onRemoveMeal"]
 }) {
   const dateStr = format(day, "yyyy-MM-dd")
@@ -116,6 +119,7 @@ function DesktopDayColumn({
         <MealSlot
           meals={dayMeals}
           onUpdateServings={onUpdateServings}
+          onUpdateComponentServings={onUpdateComponentServings}
           onRemoveMeal={onRemoveMeal}
         />
         {dayMeals.length === 0 && (
@@ -142,6 +146,7 @@ function MobileDayRow({
   onToggleDate,
   onDrop,
   onUpdateServings,
+  onUpdateComponentServings,
   onRemoveMeal,
 }: {
   day: Date
@@ -150,6 +155,7 @@ function MobileDayRow({
   onToggleDate: (dateStr: string) => void
   onDrop: CalendarGridProps["onDrop"]
   onUpdateServings: CalendarGridProps["onUpdateServings"]
+  onUpdateComponentServings: CalendarGridProps["onUpdateComponentServings"]
   onRemoveMeal: CalendarGridProps["onRemoveMeal"]
 }) {
   const dateStr = format(day, "yyyy-MM-dd")
@@ -201,6 +207,7 @@ function MobileDayRow({
         <MealSlot
           meals={dayMeals}
           onUpdateServings={onUpdateServings}
+          onUpdateComponentServings={onUpdateComponentServings}
           onRemoveMeal={onRemoveMeal}
         />
         {dayMeals.length === 0 && (
@@ -227,6 +234,7 @@ export function CalendarGrid({
   onToggleDate,
   onDrop,
   onUpdateServings,
+  onUpdateComponentServings,
   onRemoveMeal,
 }: CalendarGridProps) {
   return (
@@ -242,6 +250,7 @@ export function CalendarGrid({
             onToggleDate={onToggleDate}
             onDrop={onDrop}
             onUpdateServings={onUpdateServings}
+            onUpdateComponentServings={onUpdateComponentServings}
             onRemoveMeal={onRemoveMeal}
           />
         ))}
@@ -258,6 +267,7 @@ export function CalendarGrid({
             onToggleDate={onToggleDate}
             onDrop={onDrop}
             onUpdateServings={onUpdateServings}
+            onUpdateComponentServings={onUpdateComponentServings}
             onRemoveMeal={onRemoveMeal}
           />
         ))}

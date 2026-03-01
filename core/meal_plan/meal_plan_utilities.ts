@@ -115,21 +115,25 @@ export const addOrUpdatePlan = (
           }
         }
       } else {
-        recipe.components.push({
-          componentId,
-          servings: servingsIncrease,
-        });
-      }
-    } else {
-      dateItem.plan.push({
-        recipeId,
-        components: [
-          {
+        if (servingsIncrease >= 0) {
+          recipe.components.push({
             componentId,
             servings: servingsIncrease,
-          },
-        ],
-      });
+          });
+        }
+      }
+    } else {
+      if (servingsIncrease >= 0) {
+        dateItem.plan.push({
+          recipeId,
+          components: [
+            {
+              componentId,
+              servings: servingsIncrease,
+            },
+          ],
+        });
+      }
     }
   }
 

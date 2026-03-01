@@ -95,12 +95,13 @@ describe("buildUpdateServingsPayload", () => {
     ]);
   });
 
-  test("only updates the first component for multi-component recipe", () => {
+  test("distributes delta equally across all components for multi-component recipe", () => {
     const recipe = makeMultiComponentRecipe();
     const result = buildUpdateServingsPayload(recipe, "2026-02-19", 2, 4);
-    expect(result.components).toHaveLength(1);
+    expect(result.components).toHaveLength(2);
     expect(result.components).toEqual([
-      { recipeId: "recipe-2", componentId: "comp-a", servingsIncrease: 2 },
+      { recipeId: "recipe-2", componentId: "comp-a", servingsIncrease: 1 },
+      { recipeId: "recipe-2", componentId: "comp-b", servingsIncrease: 1 },
     ]);
   });
 

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
-import { Pencil, Copy, Trash2 } from "lucide-react";
+import { Pencil, Copy, Trash2, Check } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { IRecipe } from "../core/types/recipes";
 import { Quantities } from "../core/recipes/units";
 import { useAppSession } from "../core/hooks/use_app_session";
@@ -16,20 +17,23 @@ export function RecipeActions({ recipe, onClose }: RecipeActionsProps) {
   const router = useRouter();
   const session = useAppSession();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleEdit = () => {
     onClose?.();
     router.push(`/food/${recipe.uuid}`);
   };
 
-  const handleCopyIngredients = () => {
+  const handleCopyIngredients = async () => {
     const ingredients = recipe.components.flatMap((c) => c.ingredients);
     const text = ingredients
       .map((ing) =>
         Quantities.toStringWithIngredient(ing.name, ing.quantity)
       )
       .join("\n");
-    navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDeleteConfirmed = () => {
@@ -44,10 +48,19 @@ export function RecipeActions({ recipe, onClose }: RecipeActionsProps) {
           <Pencil className="size-3.5 mr-1.5" />
           Edit
         </Button>
-        <Button variant="outline" size="sm" onClick={handleCopyIngredients}>
-          <Copy className="size-3.5 mr-1.5" />
-          Copy ingredients
-        </Button>
+        <Tooltip open={copied}>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="sm" onClick={handleCopyIngredients}>
+              {copied ? (
+                <Check className="size-3.5 mr-1.5" />
+              ) : (
+                <Copy className="size-3.5 mr-1.5" />
+              )}
+              Copy ingredients
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Copied!</TooltipContent>
+        </Tooltip>
         <Button
           variant="outline"
           size="sm"

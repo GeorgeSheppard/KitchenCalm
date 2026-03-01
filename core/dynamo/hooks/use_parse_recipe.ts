@@ -37,7 +37,9 @@ export const useParsedRecipeToDynamo = () => {
         // Use the recipeId if provided (editing), otherwise use the parsed UUID (new recipe)
         const recipeUuid = recipeId || parsedRecipe.uuid;
         updatedRecipes.set(recipeUuid, parsedRecipe as any);
-        queryClient.setQueryData(recipesKey, updatedRecipes);
+        // Convert Map back to object format to match API response format
+        const recipesObject = Object.fromEntries(updatedRecipes);
+        queryClient.setQueryData(recipesKey, recipesObject);
       }
 
       return parsedRecipe;

@@ -17,6 +17,7 @@ import {
   usePostKitchencalmS3Upload as usePostKitchencalmS3UploadBase,
   usePostKitchencalmS3Delete as usePostKitchencalmS3DeleteBase,
   usePostKitchencalmParseRecipe as usePostKitchencalmParseRecipeBase,
+  usePostMcpAuthToken as usePostMcpAuthTokenBase,
   getGetKitchencalmRecipesQueryKey,
   getGetKitchencalmMealPlanQueryKey,
   MealPlan,
@@ -208,6 +209,24 @@ export const useParseRecipe = () => {
     mutateAsync: async (params: PostKitchencalmParseRecipeBody) => {
       const response = await mutation.mutateAsync({ data: params });
       return response.data;
+    },
+  };
+};
+
+/**
+ * Create a long-lived MCP bearer token - simplified interface
+ */
+export const useCreateMcpToken = () => {
+  const { accessToken } = useAppSession();
+  const mutation = usePostMcpAuthTokenBase({
+    axios: { headers: getAuthHeaders(accessToken) },
+  });
+
+  return {
+    ...mutation,
+    mutateAsync: async (): Promise<string> => {
+      const response = await mutation.mutateAsync();
+      return response.data.token;
     },
   };
 };

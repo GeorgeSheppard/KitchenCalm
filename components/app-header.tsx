@@ -5,6 +5,7 @@ import { signIn, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LogIn, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CreateMcpTokenButton } from "./create-mcp-token-button";
 
 export function AppHeader() {
   const session = useAppSession();
@@ -47,17 +48,20 @@ export function AppHeader() {
             })}
           </nav>
         </div>
-        <div>
+        <div className="flex items-center gap-1">
           {session.loading ? null : session.id ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => signOut()}
-              className="text-muted-foreground"
-            >
-              <LogOut className="size-4 mr-2" />
-              Sign out
-            </Button>
+            <>
+              <CreateMcpTokenButton />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => signOut()}
+                className="text-muted-foreground"
+              >
+                <LogOut className="size-4 mr-2" />
+                Sign out
+              </Button>
+            </>
           ) : (
             <Button
               variant="ghost"

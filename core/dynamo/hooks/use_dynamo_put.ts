@@ -68,5 +68,9 @@ export const usePutMealPlanToDynamo = () => {
       mutate(updatedMealPlan);
       updateMealPlan.mutate(updatedMealPlan);
     },
+    mutatePlan: (newMealPlan: IMealPlan) => {
+      mutate(newMealPlan);
+      updateMealPlan.mutate(newMealPlan);
+    },
   };
 };

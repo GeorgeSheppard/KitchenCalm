@@ -1,18 +1,21 @@
 "use client"
 
-import type { PlannedMeal } from "@/lib/meal-planner-data"
+import type { RecipeUuid, ComponentUuid, IRecipe } from "../../core/types/recipes"
+import type { IMealPlanRecipe } from "../../core/types/meal_plan"
 import { PlannedMealCard } from "./planned-meal-card"
 
 interface MealSlotProps {
-  meals: PlannedMeal[]
-  onUpdateServings: (id: string, servings: number) => void
-  onUpdateComponentServings: (id: string, componentId: string, servings: number) => void
-  onRemoveMeal: (id: string) => void
+  meals: IMealPlanRecipe[]
+  timestamp: number
+  recipes: Map<RecipeUuid, IRecipe>
+  onUpdateComponentServings: (recipeId: RecipeUuid, componentId: ComponentUuid, timestamp: number, servings: number) => void
+  onRemoveMeal: (recipeId: RecipeUuid, timestamp: number) => void
 }
 
 export function MealSlot({
   meals,
-  onUpdateServings,
+  timestamp,
+  recipes,
   onUpdateComponentServings,
   onRemoveMeal,
 }: MealSlotProps) {
@@ -20,9 +23,11 @@ export function MealSlot({
     <>
       {meals.map((meal) => (
         <PlannedMealCard
-          key={meal.id}
-          meal={meal}
-          onUpdateServings={onUpdateServings}
+          key={meal.recipeId}
+          recipeId={meal.recipeId}
+          timestamp={timestamp}
+          components={meal.components}
+          recipes={recipes}
           onUpdateComponentServings={onUpdateComponentServings}
           onRemove={onRemoveMeal}
         />

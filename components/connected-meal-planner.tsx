@@ -14,17 +14,13 @@ import { useRecipeSearch } from "../core/recipes/hooks/use_recipe_search";
 import { useSearchDebounce } from "../core/hooks/use_search_debounce";
 import { usePutMealPlanToDynamo } from "../core/dynamo/hooks/use_dynamo_put";
 import { iRecipeToRecipe } from "@/lib/adapters/recipe-adapter";
-import { mealPlanToPlannedMeals } from "@/lib/adapters/meal-plan-adapter";
 import {
-  parseMealId,
-  buildUpdateServingsPayload,
-  buildRemoveMealPayload,
-  buildDropPayload,
+  removeRecipeFromPlan,
+  buildAddRecipePayload,
   isoToTimestamp,
 } from "../core/meal_plan/meal_plan_utilities";
 import type { Recipe } from "@/lib/recipe-data";
-import type { MealType } from "@/lib/meal-planner-data";
-import { RecipeUuid, IRecipe } from "../core/types/recipes";
+import { RecipeUuid, ComponentUuid, IRecipe } from "../core/types/recipes";
 import { WeekNavigation } from "./meal-planner/week-navigation";
 import { CalendarGrid } from "./meal-planner/calendar-grid";
 import { RecipeSidebar } from "./meal-planner/recipe-sidebar";
@@ -67,18 +63,28 @@ export function ConnectedMealPlanner() {
     [weekStart]
   );
 
-  // Convert backend data to v0 PlannedMeal[]
-  const plannedMeals = useMemo(() => {
-    if (!mealPlan.data || !recipes) return [];
-    return mealPlanToPlannedMeals(mealPlan.data, recipes, imageUrls);
-  }, [mealPlan.data, recipes, imageUrls]);
+  // Build recipes map for quick lookup
+  const recipesMap = useMemo(() => {
+    const map = new Map<RecipeUuid, IRecipe>();
+    if (recipes) {
+      for (const r of recipes) {
+        map.set(r.uuid, r);
+      }
+    }
+    return map;
+  }, [recipes]);
 
-  // Filter to current week
-  const weekMeals = useMemo(() => {
-    return plannedMeals.filter((m) =>
-      days.some((d) => format(d, "yyyy-MM-dd") === m.date)
-    );
-  }, [plannedMeals, days]);
+  // Filter meal plan to current week
+  const weekPlan = useMemo(() => {
+    if (!mealPlan.data) return [];
+    const weekTimestamps = new Set(days.map((d) => isoToTimestamp(format(d, "yyyy-MM-dd"))));
+    return mealPlan.data.filter((item) => weekTimestamps.has(item.date));
+  }, [mealPlan.data, days]);
+
+  // Count total meals for the week
+  const weekMealCount = useMemo(() => {
+    return weekPlan.reduce((count, day) => count + day.plan.length, 0);
+  }, [weekPlan]);
 
   // Build sidebar recipe list (v0 format), filtered by search
   const sidebarRecipes = useMemo(() => {
@@ -125,48 +131,37 @@ export function ConnectedMealPlanner() {
   }, []);
 
   const handleDrop = useCallback(
-    (recipe: Recipe, date: string, _mealType: MealType) => {
+    (recipe: Recipe, date: string) => {
       const iRecipe = recipeByTitle.get(recipe.title);
       if (!iRecipe) return;
-      putMealPlan.mutate(buildDropPayload(iRecipe, date));
+      const payload = buildAddRecipePayload(iRecipe, date);
+      putMealPlan.mutate(payload);
     },
     [recipeByTitle, putMealPlan]
   );
 
-  const handleUpdateServings = useCallback(
-    (id: string, newServings: number) => {
-      const { isoDate, recipeId } = parseMealId(id);
-      const iRecipe = recipes?.find((r) => r.uuid === recipeId);
-      if (!iRecipe) return;
-      const currentMeal = weekMeals.find((m) => m.id === id);
-      if (!currentMeal) return;
-      putMealPlan.mutate(buildUpdateServingsPayload(iRecipe, isoDate, currentMeal.servings, newServings));
-    },
-    [recipes, weekMeals, putMealPlan]
-  );
-
   const handleRemoveMeal = useCallback(
-    (id: string) => {
-      const { isoDate, recipeId } = parseMealId(id);
-      const iRecipe = recipes?.find((r) => r.uuid === recipeId);
-      if (!iRecipe) return;
-      const currentMeal = weekMeals.find((m) => m.id === id);
-      if (!currentMeal) return;
-      putMealPlan.mutate(buildRemoveMealPayload(iRecipe, isoDate, currentMeal.servings));
+    (recipeId: RecipeUuid, timestamp: number) => {
+      if (!mealPlan.data) return;
+      const updatedPlan = removeRecipeFromPlan(mealPlan.data, recipeId, timestamp);
+      putMealPlan.mutatePlan(updatedPlan);
     },
-    [recipes, weekMeals, putMealPlan]
+    [putMealPlan, mealPlan.data]
   );
 
   const handleUpdateComponentServings = useCallback(
-    (id: string, componentId: string, newServings: number) => {
-      const { isoDate, recipeId } = parseMealId(id);
-      const currentMeal = weekMeals.find((m) => m.id === id);
-      if (!currentMeal) return;
-      const component = currentMeal.components.find((c) => c.componentId === componentId);
+    (recipeId: RecipeUuid, componentId: ComponentUuid, timestamp: number, newServings: number) => {
+      // Find the day and recipe in the meal plan
+      const dateItem = weekPlan.find((item) => item.date === timestamp);
+      if (!dateItem) return;
+      const recipe = dateItem.plan.find((r) => r.recipeId === recipeId);
+      if (!recipe) return;
+      const component = recipe.components.find((c) => c.componentId === componentId);
       if (!component) return;
+
       const delta = newServings - component.servings;
       putMealPlan.mutate({
-        timestamp: isoToTimestamp(isoDate),
+        timestamp,
         components: [{
           recipeId,
           componentId,
@@ -174,7 +169,7 @@ export function ConnectedMealPlanner() {
         }],
       });
     },
-    [weekMeals, putMealPlan]
+    [weekPlan, putMealPlan]
   );
 
   return (
@@ -190,9 +185,9 @@ export function ConnectedMealPlanner() {
               Meal Planner
             </h2>
             <p className="text-sm text-muted-foreground">
-              {weekMeals.length === 0
+              {weekMealCount === 0
                 ? "Drag recipes onto the calendar to plan your week"
-                : `${weekMeals.length} meal${weekMeals.length === 1 ? "" : "s"} planned this week`}
+                : `${weekMealCount} meal${weekMealCount === 1 ? "" : "s"} planned this week`}
             </p>
           </div>
         </div>
@@ -217,11 +212,11 @@ export function ConnectedMealPlanner() {
         <div className="flex-1 min-w-0">
           <CalendarGrid
             days={days}
-            meals={weekMeals}
+            plan={weekPlan}
+            recipes={recipesMap}
             selectedDates={selectedDates}
             onToggleDate={handleToggleDate}
             onDrop={handleDrop}
-            onUpdateServings={handleUpdateServings}
             onUpdateComponentServings={handleUpdateComponentServings}
             onRemoveMeal={handleRemoveMeal}
           />
@@ -233,11 +228,11 @@ export function ConnectedMealPlanner() {
         <RecipeSidebar recipes={sidebarRecipes} searchString={searchString} onSearchChange={setSearchString} />
         <CalendarGrid
           days={days}
-          meals={weekMeals}
+          plan={weekPlan}
+          recipes={recipesMap}
           selectedDates={selectedDates}
           onToggleDate={handleToggleDate}
           onDrop={handleDrop}
-          onUpdateServings={handleUpdateServings}
           onUpdateComponentServings={handleUpdateComponentServings}
           onRemoveMeal={handleRemoveMeal}
         />

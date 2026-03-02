@@ -58,7 +58,7 @@ function useDayDrop(
   return { isDragOver, handleDragOver, handleDragLeave, handleDrop }
 }
 
-function DesktopDayColumn({
+function DesktopDayRow({
   day,
   plan,
   recipes,
@@ -91,7 +91,7 @@ function DesktopDayColumn({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "flex flex-col border-r last:border-r-0 border-border/50 transition-colors",
+        "flex gap-4 transition-colors py-3 px-4",
         isSelected && "bg-primary/[0.06]",
         isDragOver && "bg-primary/5"
       )}
@@ -99,16 +99,13 @@ function DesktopDayColumn({
       <div
         onClick={() => onToggleDate(dateStr)}
         className={cn(
-          "flex flex-col items-center gap-0.5 py-3 border-b border-border/50 cursor-pointer transition-colors",
-          isSelected ? "bg-primary/[0.10]" : "hover:bg-accent/50"
+          "flex items-center gap-3 cursor-pointer transition-colors shrink-0",
+          isSelected ? "opacity-100" : "hover:opacity-80"
         )}
       >
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {format(day, "EEE")}
-        </span>
         <span
           className={cn(
-            "flex size-7 items-center justify-center rounded-full text-sm font-semibold transition-colors",
+            "flex size-10 items-center justify-center rounded-full text-base font-semibold transition-colors",
             today
               ? "bg-primary text-primary-foreground"
               : isSelected
@@ -118,25 +115,34 @@ function DesktopDayColumn({
         >
           {format(day, "d")}
         </span>
+        <div className="flex flex-col min-w-[140px]">
+          <span className="text-sm font-semibold text-foreground">
+            {format(day, "EEEE")}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {format(day, "MMMM d")}
+          </span>
+        </div>
       </div>
-      <div className="flex flex-col gap-1.5 p-1.5 flex-1 min-h-[200px]">
-        <MealSlot
-          meals={dayMeals}
-          timestamp={timestamp}
-          recipes={recipes}
-          onUpdateComponentServings={onUpdateComponentServings}
-          onRemoveMeal={onRemoveMeal}
-        />
-        {dayMeals.length === 0 && (
+      <div className="flex gap-2 flex-1 min-h-[80px] items-start">
+        {dayMeals.length > 0 ? (
+          <MealSlot
+            meals={dayMeals}
+            timestamp={timestamp}
+            recipes={recipes}
+            onUpdateComponentServings={onUpdateComponentServings}
+            onRemoveMeal={onRemoveMeal}
+          />
+        ) : (
           <div
             className={cn(
-              "flex items-center justify-center rounded-md border border-dashed flex-1 transition-colors",
+              "flex items-center justify-center rounded-lg border-2 border-dashed flex-1 h-full min-h-[80px] transition-colors",
               isDragOver
-                ? "border-primary/40 text-primary"
-                : "border-border/30 text-muted-foreground/30"
+                ? "border-primary/40 bg-primary/5 text-primary"
+                : "border-border/30 text-muted-foreground/30 hover:border-border/50"
             )}
           >
-            <Plus className="size-4" />
+            <Plus className="size-5" />
           </div>
         )}
       </div>
@@ -247,10 +253,10 @@ export function CalendarGrid({
 }: CalendarGridProps) {
   return (
     <div className="flex flex-col gap-0 rounded-xl border border-border bg-card overflow-hidden">
-      {/* Desktop: 7-column grid */}
-      <div className="hidden lg:grid lg:grid-cols-7">
+      {/* Desktop: vertical list with better spacing */}
+      <div className="hidden lg:flex lg:flex-col divide-y divide-border/50">
         {days.map((day) => (
-          <DesktopDayColumn
+          <DesktopDayRow
             key={format(day, "yyyy-MM-dd")}
             day={day}
             plan={plan}

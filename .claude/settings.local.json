@@ -3,7 +3,8 @@
     "allow": [
       "Bash(yarn test)",
       "Bash(yarn lint:*)",
-      "Bash(yarn commit-tests)"
+      "Bash(yarn commit-tests)",
+      "Bash(yarn ts:*)"
     ]
   }
 }

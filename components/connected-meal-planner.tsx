@@ -175,41 +175,43 @@ export function ConnectedMealPlanner() {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
-            <UtensilsCrossed className="size-5 text-primary" />
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 pb-4 -mt-4 pt-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
+              <UtensilsCrossed className="size-5 text-primary" />
+            </div>
+            <div className="flex flex-col">
+              <h2 className="font-serif text-2xl tracking-tight text-foreground">
+                Meal Planner
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {weekMealCount === 0
+                  ? "Drag recipes onto the calendar to plan your week"
+                  : `${weekMealCount} meal${weekMealCount === 1 ? "" : "s"} planned this week`}
+              </p>
+            </div>
           </div>
-          <div className="flex flex-col">
-            <h2 className="font-serif text-2xl tracking-tight text-foreground">
-              Meal Planner
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {weekMealCount === 0
-                ? "Drag recipes onto the calendar to plan your week"
-                : `${weekMealCount} meal${weekMealCount === 1 ? "" : "s"} planned this week`}
-            </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <WeekNavigation
+              weekStart={weekStart}
+              onPreviousWeek={handlePreviousWeek}
+              onNextWeek={handleNextWeek}
+              onToday={handleToday}
+            />
+            <ShoppingListDialog selectedDates={selectedDates} />
           </div>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <WeekNavigation
-            weekStart={weekStart}
-            onPreviousWeek={handlePreviousWeek}
-            onNextWeek={handleNextWeek}
-            onToday={handleToday}
-          />
-          <ShoppingListDialog selectedDates={selectedDates} />
         </div>
       </div>
 
       {/* Desktop: side-by-side layout */}
       <div className="hidden lg:flex lg:gap-6">
         <aside className="w-[280px] shrink-0">
-          <div className="sticky top-6">
+          <div className="sticky top-24">
             <RecipeSidebar recipes={sidebarRecipes} searchString={searchString} onSearchChange={setSearchString} />
           </div>
         </aside>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 sticky top-24 self-start">
           <CalendarGrid
             days={days}
             plan={weekPlan}

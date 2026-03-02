@@ -20,7 +20,7 @@ export function MealSlot({
   onRemoveMeal,
 }: MealSlotProps) {
   return (
-    <>
+    <div className="flex gap-2 flex-wrap flex-1">
       {meals.map((meal) => (
         <PlannedMealCard
           key={meal.recipeId}
@@ -32,6 +32,6 @@ export function MealSlot({
           onRemove={onRemoveMeal}
         />
       ))}
-    </>
+    </div>
   )
 }

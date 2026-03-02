@@ -1,9 +1,7 @@
 import {
   addOrUpdatePlan,
-  parseMealId,
-  buildUpdateServingsPayload,
-  buildRemoveMealPayload,
-  buildDropPayload,
+  removeRecipeFromPlan,
+  buildAddRecipePayload,
   isoToTimestamp,
 } from "../../../core/meal_plan/meal_plan_utilities";
 import { IRecipe, Unit } from "../../../core/types/recipes";
@@ -50,103 +48,123 @@ function makeMultiComponentRecipe(): IRecipe {
   });
 }
 
-// ── parseMealId ──
+// ── removeRecipeFromPlan ──
 
-describe("parseMealId", () => {
-  test("parses a standard meal id", () => {
-    expect(parseMealId("2026-02-19-recipe-1")).toEqual({
-      isoDate: "2026-02-19",
-      recipeId: "recipe-1",
-    });
+describe("removeRecipeFromPlan", () => {
+  const ts1 = isoToTimestamp("2022-07-16");
+  const ts2 = isoToTimestamp("2022-07-17");
+
+  test("removes a recipe with single component from a day", () => {
+    const plan = [
+      {
+        date: ts1,
+        plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 3 }] }],
+      },
+    ];
+    const result = removeRecipeFromPlan(plan, "r1", ts1);
+    expect(result).toStrictEqual([{ date: ts1, plan: [] }]);
   });
 
-  test("handles recipe ids with multiple hyphens", () => {
-    expect(parseMealId("2026-02-19-abc-def-ghi")).toEqual({
-      isoDate: "2026-02-19",
-      recipeId: "abc-def-ghi",
-    });
+  test("removes a recipe with multiple components from a day", () => {
+    const plan = [
+      {
+        date: ts1,
+        plan: [
+          {
+            recipeId: "r1",
+            components: [
+              { componentId: "c1", servings: 2 },
+              { componentId: "c2", servings: 3 },
+            ],
+          },
+        ],
+      },
+    ];
+    const result = removeRecipeFromPlan(plan, "r1", ts1);
+    expect(result).toStrictEqual([{ date: ts1, plan: [] }]);
+  });
+
+  test("removes recipe from day with multiple recipes (others stay)", () => {
+    const plan = [
+      {
+        date: ts1,
+        plan: [
+          { recipeId: "r1", components: [{ componentId: "c1", servings: 2 }] },
+          { recipeId: "r2", components: [{ componentId: "c2", servings: 3 }] },
+        ],
+      },
+    ];
+    const result = removeRecipeFromPlan(plan, "r1", ts1);
+    expect(result).toStrictEqual([
+      {
+        date: ts1,
+        plan: [{ recipeId: "r2", components: [{ componentId: "c2", servings: 3 }] }],
+      },
+    ]);
+  });
+
+  test("removes non-existent recipe (no-op, plan unchanged)", () => {
+    const plan = [
+      {
+        date: ts1,
+        plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 2 }] }],
+      },
+    ];
+    const result = removeRecipeFromPlan(plan, "r999", ts1);
+    expect(result).toStrictEqual(plan);
+  });
+
+  test("removes from non-existent date (no-op, plan unchanged)", () => {
+    const plan = [
+      {
+        date: ts1,
+        plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 2 }] }],
+      },
+    ];
+    const result = removeRecipeFromPlan(plan, "r1", ts2);
+    expect(result).toStrictEqual(plan);
+  });
+
+  test("preserves other dates in the plan", () => {
+    const plan = [
+      {
+        date: ts1,
+        plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 2 }] }],
+      },
+      {
+        date: ts2,
+        plan: [{ recipeId: "r2", components: [{ componentId: "c2", servings: 5 }] }],
+      },
+    ];
+    const result = removeRecipeFromPlan(plan, "r1", ts1);
+    expect(result).toStrictEqual([
+      { date: ts1, plan: [] },
+      {
+        date: ts2,
+        plan: [{ recipeId: "r2", components: [{ componentId: "c2", servings: 5 }] }],
+      },
+    ]);
+  });
+
+  test("does not mutate the original plan", () => {
+    const original = [
+      {
+        date: ts1,
+        plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 2 }] }],
+      },
+    ];
+    removeRecipeFromPlan(original, "r1", ts1);
+    expect(original[0].plan).toHaveLength(1);
+    expect(original[0].plan[0].recipeId).toBe("r1");
   });
 });
 
-// ── buildUpdateServingsPayload ──
+// ── buildAddRecipePayload ──
 
-describe("buildUpdateServingsPayload", () => {
-  test("builds a positive delta when increasing servings", () => {
-    const recipe = makeRecipe();
-    const result = buildUpdateServingsPayload(recipe, "2026-02-19", 2, 5);
-    expect(result.components).toEqual([
-      { recipeId: "recipe-1", componentId: "comp-1", servingsIncrease: 3 },
-    ]);
-  });
-
-  test("builds a negative delta when decreasing servings", () => {
-    const recipe = makeRecipe();
-    const result = buildUpdateServingsPayload(recipe, "2026-02-19", 4, 3);
-    expect(result.components).toEqual([
-      { recipeId: "recipe-1", componentId: "comp-1", servingsIncrease: -1 },
-    ]);
-  });
-
-  test("builds zero delta when servings unchanged", () => {
-    const recipe = makeRecipe();
-    const result = buildUpdateServingsPayload(recipe, "2026-02-19", 3, 3);
-    expect(result.components).toEqual([
-      { recipeId: "recipe-1", componentId: "comp-1", servingsIncrease: 0 },
-    ]);
-  });
-
-  test("distributes delta equally across all components for multi-component recipe", () => {
-    const recipe = makeMultiComponentRecipe();
-    const result = buildUpdateServingsPayload(recipe, "2026-02-19", 2, 4);
-    expect(result.components).toHaveLength(2);
-    expect(result.components).toEqual([
-      { recipeId: "recipe-2", componentId: "comp-a", servingsIncrease: 1 },
-      { recipeId: "recipe-2", componentId: "comp-b", servingsIncrease: 1 },
-    ]);
-  });
-
-  test("converts ISO date to Unix timestamp", () => {
-    const recipe = makeRecipe();
-    const result = buildUpdateServingsPayload(recipe, "2026-02-19", 1, 2);
-    expect(result.timestamp).toBe(isoToTimestamp("2026-02-19"));
-  });
-});
-
-// ── buildRemoveMealPayload ──
-
-describe("buildRemoveMealPayload", () => {
-  test("uses negative servings to remove a meal", () => {
-    const recipe = makeRecipe();
-    const result = buildRemoveMealPayload(recipe, "2026-02-19", 3);
-    expect(result.components).toEqual([
-      { recipeId: "recipe-1", componentId: "comp-1", servingsIncrease: -3 },
-    ]);
-  });
-
-  test("removes a meal with 1 serving", () => {
-    const recipe = makeRecipe();
-    const result = buildRemoveMealPayload(recipe, "2026-02-19", 1);
-    expect(result.components).toEqual([
-      { recipeId: "recipe-1", componentId: "comp-1", servingsIncrease: -1 },
-    ]);
-  });
-
-  test("includes all components for multi-component recipe", () => {
-    const recipe = makeMultiComponentRecipe();
-    const result = buildRemoveMealPayload(recipe, "2026-02-19", 5);
-    expect(result.components).toEqual([
-      { recipeId: "recipe-2", componentId: "comp-a", servingsIncrease: -5 },
-      { recipeId: "recipe-2", componentId: "comp-b", servingsIncrease: -5 },
-    ]);
-  });
-});
-
-// ── buildDropPayload ──
-
-describe("buildDropPayload", () => {
+describe("buildAddRecipePayload", () => {
   test("uses component servings as the increase", () => {
     const recipe = makeRecipe();
-    const result = buildDropPayload(recipe, "2026-02-19");
+    const result = buildAddRecipePayload(recipe, "2026-02-19");
     expect(result.components).toEqual([
       { recipeId: "recipe-1", componentId: "comp-1", servingsIncrease: 2 },
     ]);
@@ -158,7 +176,7 @@ describe("buildDropPayload", () => {
         { name: "Main", uuid: "comp-1", ingredients: [], instructions: [] },
       ],
     });
-    const result = buildDropPayload(recipe, "2026-02-19");
+    const result = buildAddRecipePayload(recipe, "2026-02-19");
     expect(result.components).toEqual([
       { recipeId: "recipe-1", componentId: "comp-1", servingsIncrease: 1 },
     ]);
@@ -166,10 +184,67 @@ describe("buildDropPayload", () => {
 
   test("includes all components for multi-component recipe", () => {
     const recipe = makeMultiComponentRecipe();
-    const result = buildDropPayload(recipe, "2026-02-19");
+    const result = buildAddRecipePayload(recipe, "2026-02-19");
     expect(result.components).toEqual([
       { recipeId: "recipe-2", componentId: "comp-a", servingsIncrease: 4 },
       { recipeId: "recipe-2", componentId: "comp-b", servingsIncrease: 4 },
+    ]);
+  });
+
+  test("handles component with zero servings", () => {
+    const recipe = makeRecipe({
+      components: [
+        {
+          name: "Main",
+          uuid: "comp-1",
+          ingredients: [],
+          instructions: [],
+          servings: 0,
+        },
+      ],
+    });
+    const result = buildAddRecipePayload(recipe, "2026-02-19");
+    expect(result.components).toEqual([
+      { recipeId: "recipe-1", componentId: "comp-1", servingsIncrease: 0 },
+    ]);
+  });
+
+  test("converts ISO date to Unix timestamp", () => {
+    const recipe = makeRecipe();
+    const result = buildAddRecipePayload(recipe, "2026-02-19");
+    expect(result.timestamp).toBe(isoToTimestamp("2026-02-19"));
+  });
+
+  test("includes all components with mixed servings", () => {
+    const recipe = makeRecipe({
+      components: [
+        {
+          name: "Sauce",
+          uuid: "comp-a",
+          ingredients: [],
+          instructions: [],
+          servings: 2,
+        },
+        {
+          name: "Pasta",
+          uuid: "comp-b",
+          ingredients: [],
+          instructions: [],
+        }, // undefined servings
+        {
+          name: "Garnish",
+          uuid: "comp-c",
+          ingredients: [],
+          instructions: [],
+          servings: 0,
+        },
+      ],
+    });
+    const result = buildAddRecipePayload(recipe, "2026-02-19");
+    expect(result.components).toEqual([
+      { recipeId: "recipe-1", componentId: "comp-a", servingsIncrease: 2 },
+      { recipeId: "recipe-1", componentId: "comp-b", servingsIncrease: 1 },
+      { recipeId: "recipe-1", componentId: "comp-c", servingsIncrease: 0 },
     ]);
   });
 });
@@ -182,22 +257,36 @@ describe("addOrUpdatePlan", () => {
 
   test("can add a recipe", () => {
     expect(
-      addOrUpdatePlan(
-        [{ date: ts1, plan: [] }],
-        {
-          timestamp: ts1,
-          components: [{ recipeId: "11", componentId: "1", servingsIncrease: 3 }],
-        }
-      )
+      addOrUpdatePlan([{ date: ts1, plan: [] }], {
+        timestamp: ts1,
+        components: [
+          { recipeId: "11", componentId: "1", servingsIncrease: 3 },
+        ],
+      })
     ).toStrictEqual([
-      { date: ts1, plan: [{ recipeId: "11", components: [{ componentId: "1", servings: 3 }] }] },
+      {
+        date: ts1,
+        plan: [
+          { recipeId: "11", components: [{ componentId: "1", servings: 3 }] },
+        ],
+      },
     ]);
   });
 
   test("can reduce serving quantity on existing recipe", () => {
     expect(
       addOrUpdatePlan(
-        [{ date: ts1, plan: [{ recipeId: "11", components: [{ componentId: "1", servings: 3 }] }] }],
+        [
+          {
+            date: ts1,
+            plan: [
+              {
+                recipeId: "11",
+                components: [{ componentId: "1", servings: 3 }],
+              },
+            ],
+          },
+        ],
         {
           timestamp: ts1,
           components: [
@@ -206,7 +295,12 @@ describe("addOrUpdatePlan", () => {
         }
       )
     ).toStrictEqual([
-      { date: ts1, plan: [{ recipeId: "11", components: [{ componentId: "1", servings: 2 }] }] },
+      {
+        date: ts1,
+        plan: [
+          { recipeId: "11", components: [{ componentId: "1", servings: 2 }] },
+        ],
+      },
     ]);
   });
 
@@ -217,8 +311,14 @@ describe("addOrUpdatePlan", () => {
           {
             date: ts1,
             plan: [
-              { recipeId: "11", components: [{ componentId: "1", servings: 2 }] },
-              { recipeId: "22", components: [{ componentId: "2", servings: 3 }] },
+              {
+                recipeId: "11",
+                components: [{ componentId: "1", servings: 2 }],
+              },
+              {
+                recipeId: "22",
+                components: [{ componentId: "2", servings: 3 }],
+              },
             ],
           },
         ],
@@ -346,54 +446,119 @@ describe("addOrUpdatePlan", () => {
   test("allows servings to reach zero", () => {
     expect(
       addOrUpdatePlan(
-        [{ date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 1 }] }] }],
-        { timestamp: ts1, components: [{ recipeId: "r1", componentId: "c1", servingsIncrease: -1 }] }
+        [
+          {
+            date: ts1,
+            plan: [
+              {
+                recipeId: "r1",
+                components: [{ componentId: "c1", servings: 1 }],
+              },
+            ],
+          },
+        ],
+        {
+          timestamp: ts1,
+          components: [
+            { recipeId: "r1", componentId: "c1", servingsIncrease: -1 },
+          ],
+        }
       )
     ).toStrictEqual([
-      { date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 0 }] }] },
+      {
+        date: ts1,
+        plan: [
+          { recipeId: "r1", components: [{ componentId: "c1", servings: 0 }] },
+        ],
+      },
     ]);
   });
 
   test("removes component when servings go below zero", () => {
     expect(
       addOrUpdatePlan(
-        [{ date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 1 }] }] }],
-        { timestamp: ts1, components: [{ recipeId: "r1", componentId: "c1", servingsIncrease: -2 }] }
+        [
+          {
+            date: ts1,
+            plan: [
+              {
+                recipeId: "r1",
+                components: [{ componentId: "c1", servings: 1 }],
+              },
+            ],
+          },
+        ],
+        {
+          timestamp: ts1,
+          components: [
+            { recipeId: "r1", componentId: "c1", servingsIncrease: -2 },
+          ],
+        }
       )
-    ).toStrictEqual([
-      { date: ts1, plan: [] },
-    ]);
+    ).toStrictEqual([{ date: ts1, plan: [] }]);
   });
 
   test("removes recipe when all components removed", () => {
     expect(
       addOrUpdatePlan(
-        [{ date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 0 }, { componentId: "c2", servings: 0 }] }] }],
-        { timestamp: ts1, components: [
-          { recipeId: "r1", componentId: "c1", servingsIncrease: -1 },
-          { recipeId: "r1", componentId: "c2", servingsIncrease: -1 },
-        ] }
+        [
+          {
+            date: ts1,
+            plan: [
+              {
+                recipeId: "r1",
+                components: [
+                  { componentId: "c1", servings: 0 },
+                  { componentId: "c2", servings: 0 },
+                ],
+              },
+            ],
+          },
+        ],
+        {
+          timestamp: ts1,
+          components: [
+            { recipeId: "r1", componentId: "c1", servingsIncrease: -1 },
+            { recipeId: "r1", componentId: "c2", servingsIncrease: -1 },
+          ],
+        }
       )
-    ).toStrictEqual([
-      { date: ts1, plan: [] },
-    ]);
+    ).toStrictEqual([{ date: ts1, plan: [] }]);
   });
 
   test("returns plan unchanged when timestamp not found", () => {
-    const plan = [{ date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 2 }] }] }];
+    const plan = [
+      {
+        date: ts1,
+        plan: [
+          { recipeId: "r1", components: [{ componentId: "c1", servings: 2 }] },
+        ],
+      },
+    ];
     expect(
       addOrUpdatePlan(plan, {
         timestamp: ts2,
-        components: [{ recipeId: "r1", componentId: "c1", servingsIncrease: 1 }],
+        components: [
+          { recipeId: "r1", componentId: "c1", servingsIncrease: 1 },
+        ],
       })
     ).toStrictEqual(plan);
   });
 
   test("does not mutate the original plan", () => {
-    const original = [{ date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 2 }] }] }];
+    const original = [
+      {
+        date: ts1,
+        plan: [
+          { recipeId: "r1", components: [{ componentId: "c1", servings: 2 }] },
+        ],
+      },
+    ];
     addOrUpdatePlan(original, {
       timestamp: ts1,
-      components: [{ recipeId: "r1", componentId: "c1", servingsIncrease: 1 }],
+      components: [
+        { recipeId: "r1", componentId: "c1", servingsIncrease: 1 },
+      ],
     });
     expect(original[0].plan[0].components[0].servings).toBe(2);
   });
@@ -402,25 +567,82 @@ describe("addOrUpdatePlan", () => {
     expect(
       addOrUpdatePlan(
         [
-          { date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 1 }] }] },
-          { date: ts2, plan: [{ recipeId: "r2", components: [{ componentId: "c2", servings: 5 }] }] },
+          {
+            date: ts1,
+            plan: [
+              {
+                recipeId: "r1",
+                components: [{ componentId: "c1", servings: 1 }],
+              },
+            ],
+          },
+          {
+            date: ts2,
+            plan: [
+              {
+                recipeId: "r2",
+                components: [{ componentId: "c2", servings: 5 }],
+              },
+            ],
+          },
         ],
-        { timestamp: ts1, components: [{ recipeId: "r1", componentId: "c1", servingsIncrease: 2 }] }
+        {
+          timestamp: ts1,
+          components: [
+            { recipeId: "r1", componentId: "c1", servingsIncrease: 2 },
+          ],
+        }
       )
     ).toStrictEqual([
-      { date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 3 }] }] },
-      { date: ts2, plan: [{ recipeId: "r2", components: [{ componentId: "c2", servings: 5 }] }] },
+      {
+        date: ts1,
+        plan: [
+          { recipeId: "r1", components: [{ componentId: "c1", servings: 3 }] },
+        ],
+      },
+      {
+        date: ts2,
+        plan: [
+          { recipeId: "r2", components: [{ componentId: "c2", servings: 5 }] },
+        ],
+      },
     ]);
   });
 
   test("adds a new component to an existing recipe", () => {
     expect(
       addOrUpdatePlan(
-        [{ date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 2 }] }] }],
-        { timestamp: ts1, components: [{ recipeId: "r1", componentId: "c2", servingsIncrease: 3 }] }
+        [
+          {
+            date: ts1,
+            plan: [
+              {
+                recipeId: "r1",
+                components: [{ componentId: "c1", servings: 2 }],
+              },
+            ],
+          },
+        ],
+        {
+          timestamp: ts1,
+          components: [
+            { recipeId: "r1", componentId: "c2", servingsIncrease: 3 },
+          ],
+        }
       )
     ).toStrictEqual([
-      { date: ts1, plan: [{ recipeId: "r1", components: [{ componentId: "c1", servings: 2 }, { componentId: "c2", servings: 3 }] }] },
+      {
+        date: ts1,
+        plan: [
+          {
+            recipeId: "r1",
+            components: [
+              { componentId: "c1", servings: 2 },
+              { componentId: "c2", servings: 3 },
+            ],
+          },
+        ],
+      },
     ]);
   });
 });

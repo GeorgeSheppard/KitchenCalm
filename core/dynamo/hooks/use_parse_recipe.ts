@@ -1,8 +1,7 @@
 import { useParseRecipe } from '../../../client/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { getRecipesQueryKey } from '../../../client/hooks';
-import { IRecipes } from '../../types/recipes';
-import { Recipe } from '../../../client/generated/hooks';
+import { AxiosResponse } from 'axios';
 
 /**
  * Hook for parsing recipe text and adding it to the recipe cache
@@ -29,17 +28,21 @@ export const useParsedRecipeToDynamo = () => {
       }
 
       // Update the query cache with the parsed recipe
-      const previousRecipes: IRecipes | undefined =
-        queryClient.getQueryData(recipesKey);
+      // The cache stores the raw AxiosResponse, not the extracted data
+      const cachedResponse = queryClient.getQueryData(recipesKey) as AxiosResponse | undefined;
+      const recipeUuid = recipeId || parsedRecipe.uuid;
 
-      if (previousRecipes) {
-        const updatedRecipes = new Map(previousRecipes);
-        // Use the recipeId if provided (editing), otherwise use the parsed UUID (new recipe)
-        const recipeUuid = recipeId || parsedRecipe.uuid;
-        updatedRecipes.set(recipeUuid, parsedRecipe as any);
-        // Convert Map back to object format to match API response format
-        const recipesObject = Object.fromEntries(updatedRecipes);
-        queryClient.setQueryData(recipesKey, recipesObject);
+      if (cachedResponse?.data) {
+        queryClient.setQueryData(recipesKey, {
+          ...cachedResponse,
+          data: {
+            ...cachedResponse.data,
+            [recipeUuid]: parsedRecipe,
+          },
+        });
+      } else {
+        // No cached data yet — invalidate so /food refetches from the server
+        queryClient.invalidateQueries({ queryKey: recipesKey });
       }
 
       return parsedRecipe;

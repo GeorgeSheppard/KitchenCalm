@@ -26,17 +26,29 @@ export function DeleteRecipeDialog({
 }: DeleteRecipeDialogProps) {
   const deleteRecipe = useDeleteRecipeFromDynamo();
 
-  const handleDelete = async () => {
+  const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     try {
       await deleteRecipe.mutateAsync(recipe.uuid);
       onDeleted?.();
-    } catch {
+      onOpenChange(false);
+    } catch (error) {
       // error handling via react-query
     }
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    // Prevent closing the dialog while delete is in progress
+    if (deleteRecipe.isLoading) {
+      return;
+    }
+    onOpenChange(newOpen);
+  };
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete recipe?</AlertDialogTitle>
@@ -46,12 +58,13 @@ export function DeleteRecipeDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={deleteRecipe.isLoading}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            disabled={deleteRecipe.isLoading}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
           >
-            Delete
+            {deleteRecipe.isLoading ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

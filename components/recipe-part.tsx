@@ -87,10 +87,12 @@ function IngredientsList({
                   {isChecked && <Check className="size-3" />}
                 </span>
                 <span className={isChecked ? "line-through" : ""}>
-                  <span className="font-medium">
-                    {item.amount}
-                    {item.unit ? ` ${item.unit}` : ""}
-                  </span>{" "}
+                  {item.unit !== "none" && (
+                    <span className="font-medium">
+                      {item.amount}
+                      {item.unit ? ` ${item.unit}` : ""}
+                    </span>
+                  )}{" "}
                   {item.name}
                 </span>
               </button>

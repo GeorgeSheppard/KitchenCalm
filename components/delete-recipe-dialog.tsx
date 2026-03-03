@@ -1,6 +1,5 @@
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -8,6 +7,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { IRecipe } from "../core/types/recipes";
 import { useDeleteRecipeFromDynamo } from "../core/dynamo/hooks/use_dynamo_delete";
 
@@ -59,13 +60,16 @@ export function DeleteRecipeDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={deleteRecipe.isLoading}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
+          <Button
             onClick={handleDelete}
             disabled={deleteRecipe.isLoading}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
+            variant="destructive"
           >
+            {deleteRecipe.isLoading && (
+              <Loader2 className="size-4 mr-2 animate-spin" />
+            )}
             {deleteRecipe.isLoading ? "Deleting..." : "Delete"}
-          </AlertDialogAction>
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

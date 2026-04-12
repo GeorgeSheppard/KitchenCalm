@@ -2,7 +2,9 @@ import NextAuth, { NextAuthOptions, Session } from "next-auth";
 import CognitoProvider from "next-auth/providers/cognito";
 import { RealUserId } from "../../../core/types/utilities";
 
-export type CustomSession = Session & { id?: RealUserId };
+const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
+
+export type CustomSession = Session & { id?: RealUserId; error?: string };
 
 /**
  * Refresh the access token using the refresh token from Cognito
@@ -45,6 +47,12 @@ async function refreshAccessToken(token: any) {
 }
 
 export const authOptions: NextAuthOptions = {
+  session: {
+    maxAge: SESSION_MAX_AGE_SECONDS,
+  },
+  jwt: {
+    maxAge: SESSION_MAX_AGE_SECONDS,
+  },
   providers: [
     CognitoProvider({
       clientId: process.env.ENV_AWS_COGNITO_CLIENT_ID ?? "",
@@ -58,10 +66,10 @@ export const authOptions: NextAuthOptions = {
       // Store tokens and expiration time on first login
       if (account) {
         return {
+          ...token,
           accessToken: account.access_token,
           refreshToken: account.refresh_token,
           expiresAt: (account.expires_at ?? 0) * 1000,
-          ...token,
         };
       }
 
@@ -73,12 +81,11 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (token.error) {
-        throw new Error("Token refresh failed - please re-authenticate");
-      }
-
-      (session as any).id = token.sub;
+      (session as CustomSession).id = token.sub as RealUserId;
       (session as any).accessToken = token.accessToken;
+      if (token.error) {
+        (session as CustomSession).error = token.error as string;
+      }
       return session;
     },
   },

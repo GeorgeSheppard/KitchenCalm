@@ -23,6 +23,8 @@ export function ConfirmDeleteButton({
           setDeleting(true);
           try {
             await onDelete();
+          } catch (error) {
+            console.error("[ConfirmDeleteButton] onDelete failed:", error);
           } finally {
             setDeleting(false);
             setConfirming(false);

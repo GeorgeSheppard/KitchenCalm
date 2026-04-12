@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { RecipeCard } from "./recipe-card";
 import { RecipeActions } from "./recipe-actions";
@@ -41,9 +42,9 @@ export function RecipeDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl sm:max-w-3xl max-h-[90vh] p-0 gap-0 overflow-hidden">
         <div className="flex items-center justify-between border-b border-border px-5 py-3">
-          <h2 className="font-serif text-lg text-foreground">
+          <DialogTitle className="font-serif text-lg">
             {v0Recipe.title}
-          </h2>
+          </DialogTitle>
         </div>
         <div className="overflow-y-auto max-h-[calc(90vh-60px)]">
           <div className="p-1">

@@ -23,7 +23,7 @@ export function PlannedMealCard({
   onRemove,
 }: PlannedMealCardProps) {
   const recipe = recipes.get(recipeId)
-  const recipeTitle = recipe?.name || "Unknown Recipe"
+  const recipeTitle = recipe?.name || "Deleted recipe"
 
   return (
     <div className="group relative rounded-lg border border-border/50 bg-card shadow-sm transition-all hover:shadow-md min-w-[280px] flex-1">
@@ -46,7 +46,7 @@ export function PlannedMealCard({
           </div>
         </div>
 
-        {components.length > 0 && (
+        {recipe && components.length > 0 && (
           <div className="space-y-2 border-t border-border/30 pt-3">
             {components.map((component) => {
               const componentDef = recipe?.components.find((c) => c.uuid === component.componentId)

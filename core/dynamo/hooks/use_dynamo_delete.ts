@@ -1,8 +1,9 @@
+import { AxiosResponse } from "axios";
 import { RecipeUuid } from "../../types/recipes";
-import { IMealPlan } from "../../types/meal_plan";
 import { useAppSession } from "../../hooks/use_app_session";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDeleteRecipe, getRecipesQueryKey, getMealPlanQueryKey } from "../../../client/hooks";
+import { GetKitchencalmRecipes200, MealPlan } from "../../../client/generated/hooks";
 
 const useDeleteRecipeInCache = () => {
   const queryClient = useQueryClient();
@@ -10,43 +11,24 @@ const useDeleteRecipeInCache = () => {
   const mealPlanKey = getMealPlanQueryKey();
 
   return (recipeId: RecipeUuid) => {
-    console.log("[deleteRecipe] starting optimistic cache update for:", recipeId);
-
-    // Cache stores raw AxiosResponse shapes: { data: ..., status, headers, ... }
-    const previousRecipesCache = queryClient.getQueryData(recipesKey) as any;
-    const previousMealPlanCache = queryClient.getQueryData(mealPlanKey) as any;
-
-    console.log("[deleteRecipe] recipes cache:", previousRecipesCache ? `present (data type: ${typeof previousRecipesCache.data})` : "absent");
-    console.log("[deleteRecipe] meal plan cache:", previousMealPlanCache ? `present (data isArray: ${Array.isArray(previousMealPlanCache.data)})` : "absent");
+    const previousRecipesCache = queryClient.getQueryData<AxiosResponse<GetKitchencalmRecipes200>>(recipesKey);
+    const previousMealPlanCache = queryClient.getQueryData<AxiosResponse<MealPlan>>(mealPlanKey);
 
     if (previousRecipesCache?.data) {
-      const recipeKeys = Object.keys(previousRecipesCache.data);
-      console.log("[deleteRecipe] recipe count before delete:", recipeKeys.length, "| target uuid in cache:", recipeKeys.includes(recipeId));
-      const { [recipeId]: _removed, ...remainingRecipes } = previousRecipesCache.data as Record<string, unknown>;
-      console.log("[deleteRecipe] recipe count after delete:", Object.keys(remainingRecipes).length);
+      const { [recipeId]: _removed, ...remainingRecipes } = previousRecipesCache.data;
       queryClient.setQueryData(recipesKey, { ...previousRecipesCache, data: remainingRecipes });
-      console.log("[deleteRecipe] recipes cache updated");
-    } else {
-      console.log("[deleteRecipe] skipping recipes cache update (no data)");
     }
 
     if (previousMealPlanCache?.data && Array.isArray(previousMealPlanCache.data)) {
-      console.log("[deleteRecipe] meal plan day count:", previousMealPlanCache.data.length);
-      const updatedMealPlan = (previousMealPlanCache.data as IMealPlan).map((item) => ({
+      const updatedMealPlan = previousMealPlanCache.data.map((item) => ({
         ...item,
         plan: item.plan.filter((r) => r.recipeId !== recipeId),
       }));
       queryClient.setQueryData(mealPlanKey, { ...previousMealPlanCache, data: updatedMealPlan });
-      console.log("[deleteRecipe] meal plan cache updated");
-    } else {
-      console.log("[deleteRecipe] skipping meal plan cache update (no data or not array)");
     }
-
-    console.log("[deleteRecipe] optimistic cache update complete");
 
     return {
       undo: () => {
-        console.log("[deleteRecipe] undoing optimistic cache update for:", recipeId);
         queryClient.setQueryData(recipesKey, previousRecipesCache);
         queryClient.setQueryData(mealPlanKey, previousMealPlanCache);
       },
@@ -62,23 +44,11 @@ export const useDeleteRecipeFromDynamo = () => {
   return {
     ...deleteRecipe,
     mutateAsync: async (uuid: string) => {
-      console.log("[deleteRecipe] mutateAsync called for uuid:", uuid);
-
-      let context: ReturnType<ReturnType<typeof useDeleteRecipeInCache>>;
-      try {
-        context = mutate(uuid as RecipeUuid);
-      } catch (error) {
-        console.error("[deleteRecipe] cache update threw before API call:", error);
-        throw error;
-      }
+      const context = mutate(uuid);
 
       try {
-        console.log("[deleteRecipe] firing API delete request");
-        const result = await deleteRecipe.mutateAsync(uuid);
-        console.log("[deleteRecipe] API delete succeeded");
-        return result;
+        return await deleteRecipe.mutateAsync(uuid);
       } catch (error) {
-        console.error("[deleteRecipe] API delete failed, rolling back cache:", error);
         context.undo();
         throw error;
       }

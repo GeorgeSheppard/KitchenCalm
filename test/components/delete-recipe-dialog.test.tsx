@@ -8,27 +8,7 @@ import { DeleteRecipeDialog } from "../../components/delete-recipe-dialog";
 import { useDeleteRecipeFromDynamo } from "../../core/dynamo/hooks/use_dynamo_delete";
 import { IRecipe } from "../../core/types/recipes";
 
-// Mock the delete hook — we only care that mutateAsync is called
 jest.mock("../../core/dynamo/hooks/use_dynamo_delete");
-
-// Mock the Radix-based Dialog to plain HTML so jsdom doesn't need browser APIs
-jest.mock("@/components/ui/dialog", () => {
-  const React = require("react");
-  return {
-    Dialog: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
-      open ? React.createElement("div", { "data-testid": "dialog" }, children) : null,
-    DialogContent: ({ children }: { children: React.ReactNode }) =>
-      React.createElement("div", null, children),
-    DialogHeader: ({ children }: { children: React.ReactNode }) =>
-      React.createElement("div", null, children),
-    DialogTitle: ({ children }: { children: React.ReactNode }) =>
-      React.createElement("div", null, children),
-    DialogDescription: ({ children }: { children: React.ReactNode }) =>
-      React.createElement("div", null, children),
-    DialogFooter: ({ children }: { children: React.ReactNode }) =>
-      React.createElement("div", null, children),
-  };
-});
 
 const mockMutateAsync = jest.fn();
 
@@ -80,7 +60,7 @@ describe("DeleteRecipeDialog", () => {
     expect(mockMutateAsync).not.toHaveBeenCalled();
   });
 
-  it("does not render when open is false", () => {
+  it("does not render content when open is false", () => {
     render(
       <DeleteRecipeDialog
         recipe={recipe}
@@ -89,7 +69,7 @@ describe("DeleteRecipeDialog", () => {
       />
     );
 
-    expect(screen.queryByTestId("dialog")).toBeNull();
+    expect(screen.queryByRole("button", { name: /^delete$/i })).toBeNull();
   });
 
   it("calls onDeleted callback after successful deletion", async () => {

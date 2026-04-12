@@ -67,10 +67,10 @@ export function AppHeader() {
                 <Link key={link.href} href={link.href} passHref>
                   <span
                     className={cn(
-                      "text-sm px-3 py-2 rounded-md cursor-pointer transition-colors",
+                      "text-sm px-3 py-2 cursor-pointer transition-colors border-b-2",
                       isActive
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                        ? "border-primary text-primary font-medium"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {link.label}

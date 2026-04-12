@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
-import { Pencil, Copy, Trash2, Check } from "lucide-react";
+import { Pencil, Copy, Check } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { IRecipe } from "../core/types/recipes";
 import { Quantities } from "../core/recipes/units";
-import { useAppSession } from "../core/hooks/use_app_session";
-import { DeleteRecipeDialog } from "./delete-recipe-dialog";
+import { useDeleteRecipeFromDynamo } from "../core/dynamo/hooks/use_dynamo_delete";
+import { ConfirmDeleteButton } from "./confirm-delete-button";
 
 interface RecipeActionsProps {
   recipe: IRecipe;
@@ -15,8 +15,7 @@ interface RecipeActionsProps {
 
 export function RecipeActions({ recipe, onClose }: RecipeActionsProps) {
   const router = useRouter();
-  const session = useAppSession();
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  const deleteRecipe = useDeleteRecipeFromDynamo();
   const [copied, setCopied] = useState(false);
 
   const handleEdit = () => {
@@ -36,48 +35,32 @@ export function RecipeActions({ recipe, onClose }: RecipeActionsProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleDeleteConfirmed = () => {
-    setDeleteOpen(false);
-    onClose?.();
-  };
-
   return (
-    <>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" onClick={handleEdit}>
-          <Pencil className="size-3.5 mr-1.5" />
-          Edit
-        </Button>
-        <Tooltip open={copied}>
-          <TooltipTrigger asChild>
-            <Button variant="outline" size="sm" onClick={handleCopyIngredients}>
-              {copied ? (
-                <Check className="size-3.5 mr-1.5" />
-              ) : (
-                <Copy className="size-3.5 mr-1.5" />
-              )}
-              Copy ingredients
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Copied!</TooltipContent>
-        </Tooltip>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setDeleteOpen(true)}
-          className="text-destructive hover:text-destructive"
-        >
-          <Trash2 className="size-3.5 mr-1.5" />
-          Delete
-        </Button>
-      </div>
-
-      <DeleteRecipeDialog
-        recipe={recipe}
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        onDeleted={handleDeleteConfirmed}
+    <div className="flex flex-wrap gap-2">
+      <Button variant="outline" size="sm" onClick={handleEdit}>
+        <Pencil className="size-3.5 mr-1.5" />
+        Edit
+      </Button>
+      <Tooltip open={copied}>
+        <TooltipTrigger asChild>
+          <Button variant="outline" size="sm" onClick={handleCopyIngredients}>
+            {copied ? (
+              <Check className="size-3.5 mr-1.5" />
+            ) : (
+              <Copy className="size-3.5 mr-1.5" />
+            )}
+            Copy ingredients
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Copied!</TooltipContent>
+      </Tooltip>
+      <ConfirmDeleteButton
+        onDelete={async () => {
+          await deleteRecipe.mutateAsync(recipe.uuid);
+          onClose?.();
+        }}
+        disabled={deleteRecipe.disabled}
       />
-    </>
+    </div>
   );
 }

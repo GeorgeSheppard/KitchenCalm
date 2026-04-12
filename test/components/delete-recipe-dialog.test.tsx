@@ -1,7 +1,3 @@
-/**
- * @jest-environment jsdom
- */
-
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { DeleteRecipeDialog } from "../../components/delete-recipe-dialog";
@@ -22,21 +18,17 @@ const recipe: IRecipe = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  (useDeleteRecipeFromDynamo as jest.Mock).mockReturnValue({
+  jest.mocked(useDeleteRecipeFromDynamo).mockReturnValue({
     mutateAsync: mockMutateAsync,
     isLoading: false,
-  });
+  } as unknown as ReturnType<typeof useDeleteRecipeFromDynamo>);
   mockMutateAsync.mockResolvedValue({});
 });
 
 describe("DeleteRecipeDialog", () => {
   it("calls mutateAsync with the recipe uuid when Delete is clicked", async () => {
     render(
-      <DeleteRecipeDialog
-        recipe={recipe}
-        open={true}
-        onOpenChange={jest.fn()}
-      />
+      <DeleteRecipeDialog recipe={recipe} open={true} onOpenChange={jest.fn()} />
     );
 
     fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
@@ -48,11 +40,7 @@ describe("DeleteRecipeDialog", () => {
 
   it("does not call mutateAsync when Cancel is clicked", () => {
     render(
-      <DeleteRecipeDialog
-        recipe={recipe}
-        open={true}
-        onOpenChange={jest.fn()}
-      />
+      <DeleteRecipeDialog recipe={recipe} open={true} onOpenChange={jest.fn()} />
     );
 
     fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
@@ -62,11 +50,7 @@ describe("DeleteRecipeDialog", () => {
 
   it("does not render content when open is false", () => {
     render(
-      <DeleteRecipeDialog
-        recipe={recipe}
-        open={false}
-        onOpenChange={jest.fn()}
-      />
+      <DeleteRecipeDialog recipe={recipe} open={false} onOpenChange={jest.fn()} />
     );
 
     expect(screen.queryByRole("button", { name: /^delete$/i })).toBeNull();

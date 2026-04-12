@@ -1,5 +1,4 @@
-import { IRecipes, RecipeUuid } from "../../types/recipes";
-import clone from "just-clone";
+import { RecipeUuid } from "../../types/recipes";
 import { IMealPlan } from "../../types/meal_plan";
 import { useAppSession } from "../../hooks/use_app_session";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,30 +10,27 @@ const useDeleteRecipeInCache = () => {
   const mealPlanKey = getMealPlanQueryKey();
 
   return (recipeId: RecipeUuid) => {
-    const previousRecipes: IRecipes | undefined =
-      queryClient.getQueryData(recipesKey);
-    const previousMealPlan: IMealPlan | undefined =
-      queryClient.getQueryData(mealPlanKey);
+    // Cache stores raw AxiosResponse shapes: { data: ..., status, headers, ... }
+    const previousRecipesCache = queryClient.getQueryData(recipesKey) as any;
+    const previousMealPlanCache = queryClient.getQueryData(mealPlanKey) as any;
 
-    if (previousRecipes) {
-      const updatedRecipes = new Map(previousRecipes);
-      updatedRecipes.delete(recipeId);
-      queryClient.setQueryData(recipesKey, updatedRecipes);
+    if (previousRecipesCache?.data) {
+      const { [recipeId]: _removed, ...remainingRecipes } = previousRecipesCache.data as Record<string, unknown>;
+      queryClient.setQueryData(recipesKey, { ...previousRecipesCache, data: remainingRecipes });
     }
 
-    if (previousMealPlan) {
-      const updatedMealPlan = clone(previousMealPlan);
-      for (const mealPlanItem of updatedMealPlan) {
-        // Remove the recipe from the plan array
-        mealPlanItem.plan = mealPlanItem.plan.filter((r) => r.recipeId !== recipeId);
-      }
-      queryClient.setQueryData(mealPlanKey, updatedMealPlan);
+    if (previousMealPlanCache?.data && Array.isArray(previousMealPlanCache.data)) {
+      const updatedMealPlan = (previousMealPlanCache.data as IMealPlan).map((item) => ({
+        ...item,
+        plan: item.plan.filter((r) => r.recipeId !== recipeId),
+      }));
+      queryClient.setQueryData(mealPlanKey, { ...previousMealPlanCache, data: updatedMealPlan });
     }
 
     return {
       undo: () => {
-        queryClient.setQueryData(recipesKey, previousRecipes);
-        queryClient.setQueryData(mealPlanKey, previousMealPlan);
+        queryClient.setQueryData(recipesKey, previousRecipesCache);
+        queryClient.setQueryData(mealPlanKey, previousMealPlanCache);
       },
     };
   };

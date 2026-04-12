@@ -12,7 +12,7 @@ export type CustomSession = Session & { id?: RealUserId; error?: string };
 async function refreshAccessToken(token: any) {
   try {
     const response = await fetch(
-      `${process.env.ENV_AWS_COGNITO_CLIENT_ISSUER}/oauth2/token`,
+      `${process.env.ENV_AWS_COGNITO_DOMAIN_URL}/oauth2/token`,
       {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },

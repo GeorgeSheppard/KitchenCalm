@@ -207,7 +207,7 @@ export function ConnectedMealPlanner() {
       {/* Desktop: side-by-side layout */}
       <div className="hidden lg:flex lg:gap-6">
         <aside className="w-[280px] shrink-0">
-          <div className="sticky top-24">
+          <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-hidden flex flex-col">
             <RecipeSidebar recipes={sidebarRecipes} searchString={searchString} onSearchChange={setSearchString} />
           </div>
         </aside>

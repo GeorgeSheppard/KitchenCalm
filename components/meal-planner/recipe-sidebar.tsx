@@ -14,9 +14,9 @@ interface RecipeSidebarProps {
 
 export function RecipeSidebar({ recipes, searchString, onSearchChange }: RecipeSidebarProps) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 min-h-0">
       <SearchBar searchString={searchString} onSearchChange={onSearchChange} />
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 overflow-y-auto min-h-0">
         {recipes.map((recipe) => (
           <DraggableRecipe key={recipe.title} recipe={recipe} />
         ))}

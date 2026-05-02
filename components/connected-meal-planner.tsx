@@ -204,14 +204,12 @@ export function ConnectedMealPlanner() {
         </div>
       </div>
 
-      {/* Desktop: side-by-side layout */}
+      {/* Desktop: side-by-side layout with independent scrolling */}
       <div className="hidden lg:flex lg:gap-6">
-        <aside className="w-[280px] shrink-0">
-          <div className="sticky top-24">
-            <RecipeSidebar recipes={sidebarRecipes} searchString={searchString} onSearchChange={setSearchString} />
-          </div>
+        <aside className="w-[280px] shrink-0 overflow-y-auto max-h-[calc(100vh-14rem)]">
+          <RecipeSidebar recipes={sidebarRecipes} searchString={searchString} onSearchChange={setSearchString} />
         </aside>
-        <div className="flex-1 min-w-0 sticky top-24 self-start">
+        <div className="flex-1 min-w-0 overflow-y-auto max-h-[calc(100vh-14rem)]">
           <CalendarGrid
             days={days}
             plan={weekPlan}

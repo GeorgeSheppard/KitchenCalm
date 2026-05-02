@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react"
-import { format, startOfWeek, endOfWeek } from "date-fns"
+import { format, addDays, subDays, isSameDay } from "date-fns"
 
 interface WeekNavigationProps {
   weekStart: Date
@@ -17,15 +17,14 @@ export function WeekNavigation({
   onNextWeek,
   onToday,
 }: WeekNavigationProps) {
-  const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 })
-  const isSameMonth = weekStart.getMonth() === weekEnd.getMonth()
+  const rangeEnd = addDays(weekStart, 14)
+  const isSameMonth = weekStart.getMonth() === rangeEnd.getMonth()
 
   const label = isSameMonth
-    ? `${format(weekStart, "MMM d")} - ${format(weekEnd, "d, yyyy")}`
-    : `${format(weekStart, "MMM d")} - ${format(weekEnd, "MMM d, yyyy")}`
+    ? `${format(weekStart, "MMM d")} - ${format(rangeEnd, "d, yyyy")}`
+    : `${format(weekStart, "MMM d")} - ${format(rangeEnd, "MMM d, yyyy")}`
 
-  const isCurrentWeek =
-    startOfWeek(new Date(), { weekStartsOn: 1 }).getTime() === weekStart.getTime()
+  const isCurrentWeek = isSameDay(subDays(new Date(), 4), weekStart)
 
   return (
     <div className="flex items-center gap-2">

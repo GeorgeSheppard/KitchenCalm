@@ -23,6 +23,7 @@ import { WeekNavigation } from "./meal-planner/week-navigation";
 import { CalendarGrid } from "./meal-planner/calendar-grid";
 import { RecipeSidebar } from "./meal-planner/recipe-sidebar";
 import { ShoppingListDialog } from "./shopping-list-dialog";
+import { RecipeDetailDialog } from "./recipe-detail-dialog";
 
 export function ConnectedMealPlanner() {
   const [rangeStart, setRangeStart] = useState(() =>
@@ -33,6 +34,8 @@ export function ConnectedMealPlanner() {
   );
 
   const [searchString, debouncedSearch, setSearchString] = useSearchDebounce("");
+  const [selectedRecipe, setSelectedRecipe] = useState<IRecipe | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { data: recipes } = useRecipes();
   const searchResultIds = useRecipeSearch(debouncedSearch);
   const mealPlan = useMealPlan();
@@ -170,6 +173,16 @@ export function ConnectedMealPlanner() {
     [weekPlan, putMealPlan]
   );
 
+  const handleRecipeClick = useCallback(
+    (recipe: Recipe) => {
+      const iRecipe = recipeByTitle.get(recipe.title);
+      if (!iRecipe) return;
+      setSelectedRecipe(iRecipe);
+      setDialogOpen(true);
+    },
+    [recipeByTitle]
+  );
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -205,7 +218,7 @@ export function ConnectedMealPlanner() {
       {/* Desktop: side-by-side layout with independent scrolling */}
       <div className="hidden lg:flex lg:gap-6">
         <aside className="w-[280px] shrink-0 overflow-y-auto max-h-[calc(100vh-14rem)]">
-          <RecipeSidebar recipes={sidebarRecipes} searchString={searchString} onSearchChange={setSearchString} />
+          <RecipeSidebar recipes={sidebarRecipes} searchString={searchString} onSearchChange={setSearchString} onRecipeClick={handleRecipeClick} />
         </aside>
         <div className="flex-1 min-w-0 overflow-y-auto max-h-[calc(100vh-14rem)]">
           <CalendarGrid
@@ -223,7 +236,7 @@ export function ConnectedMealPlanner() {
 
       {/* Mobile: stacked layout */}
       <div className="flex flex-col gap-6 lg:hidden">
-        <RecipeSidebar recipes={sidebarRecipes} searchString={searchString} onSearchChange={setSearchString} />
+        <RecipeSidebar recipes={sidebarRecipes} searchString={searchString} onSearchChange={setSearchString} onRecipeClick={handleRecipeClick} />
         <CalendarGrid
           days={days}
           plan={weekPlan}
@@ -236,6 +249,11 @@ export function ConnectedMealPlanner() {
         />
       </div>
 
+      <RecipeDetailDialog
+        recipe={selectedRecipe}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
     </div>
   );
 }

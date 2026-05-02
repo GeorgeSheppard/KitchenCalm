@@ -10,22 +10,23 @@ interface RecipeSidebarProps {
   recipes: Recipe[]
   searchString: string
   onSearchChange: (value: string) => void
+  onRecipeClick: (recipe: Recipe) => void
 }
 
-export function RecipeSidebar({ recipes, searchString, onSearchChange }: RecipeSidebarProps) {
+export function RecipeSidebar({ recipes, searchString, onSearchChange, onRecipeClick }: RecipeSidebarProps) {
   return (
     <div className="flex flex-col gap-3">
       <SearchBar searchString={searchString} onSearchChange={onSearchChange} />
       <div className="flex flex-col gap-2">
         {recipes.map((recipe) => (
-          <DraggableRecipe key={recipe.title} recipe={recipe} />
+          <DraggableRecipe key={recipe.title} recipe={recipe} onRecipeClick={onRecipeClick} />
         ))}
       </div>
     </div>
   )
 }
 
-function DraggableRecipe({ recipe }: { recipe: Recipe }) {
+function DraggableRecipe({ recipe, onRecipeClick }: { recipe: Recipe; onRecipeClick: (recipe: Recipe) => void }) {
   function handleDragStart(e: React.DragEvent) {
     e.dataTransfer.setData("application/recipe", JSON.stringify(recipe))
     e.dataTransfer.effectAllowed = "copy"
@@ -35,6 +36,7 @@ function DraggableRecipe({ recipe }: { recipe: Recipe }) {
     <div
       draggable
       onDragStart={handleDragStart}
+      onClick={() => onRecipeClick(recipe)}
       className="group flex items-center gap-3 rounded-lg border border-border/60 bg-card p-2.5 shadow-sm cursor-grab active:cursor-grabbing hover:border-primary/30 hover:shadow-md transition-all select-none"
     >
       <div className="text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-colors shrink-0">

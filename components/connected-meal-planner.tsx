@@ -1,10 +1,8 @@
 import { useState, useCallback, useMemo } from "react";
 import {
-  startOfWeek,
-  addWeeks,
-  subWeeks,
+  subDays,
+  addDays,
   eachDayOfInterval,
-  endOfWeek,
   format,
 } from "date-fns";
 import { UtensilsCrossed } from "lucide-react";
@@ -27,8 +25,8 @@ import { RecipeSidebar } from "./meal-planner/recipe-sidebar";
 import { ShoppingListDialog } from "./shopping-list-dialog";
 
 export function ConnectedMealPlanner() {
-  const [weekStart, setWeekStart] = useState(() =>
-    startOfWeek(new Date(), { weekStartsOn: 1 })
+  const [rangeStart, setRangeStart] = useState(() =>
+    subDays(new Date(), 4)
   );
   const [selectedDates, setSelectedDates] = useState<Set<string>>(
     () => new Set()
@@ -57,10 +55,10 @@ export function ConnectedMealPlanner() {
   const days = useMemo(
     () =>
       eachDayOfInterval({
-        start: weekStart,
-        end: endOfWeek(weekStart, { weekStartsOn: 1 }),
+        start: rangeStart,
+        end: addDays(rangeStart, 14),
       }),
-    [weekStart]
+    [rangeStart]
   );
 
   // Build recipes map for quick lookup
@@ -107,15 +105,15 @@ export function ConnectedMealPlanner() {
   }, [recipes]);
 
   const handlePreviousWeek = useCallback(() => {
-    setWeekStart((prev) => subWeeks(prev, 1));
+    setRangeStart((prev) => subDays(prev, 7));
   }, []);
 
   const handleNextWeek = useCallback(() => {
-    setWeekStart((prev) => addWeeks(prev, 1));
+    setRangeStart((prev) => addDays(prev, 7));
   }, []);
 
   const handleToday = useCallback(() => {
-    setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }));
+    setRangeStart(subDays(new Date(), 4));
   }, []);
 
   const handleToggleDate = useCallback((dateStr: string) => {
@@ -194,7 +192,7 @@ export function ConnectedMealPlanner() {
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <WeekNavigation
-              weekStart={weekStart}
+              weekStart={rangeStart}
               onPreviousWeek={handlePreviousWeek}
               onNextWeek={handleNextWeek}
               onToday={handleToday}
@@ -204,14 +202,12 @@ export function ConnectedMealPlanner() {
         </div>
       </div>
 
-      {/* Desktop: side-by-side layout */}
+      {/* Desktop: side-by-side layout with independent scrolling */}
       <div className="hidden lg:flex lg:gap-6">
-        <aside className="w-[280px] shrink-0">
-          <div className="sticky top-24">
-            <RecipeSidebar recipes={sidebarRecipes} searchString={searchString} onSearchChange={setSearchString} />
-          </div>
+        <aside className="w-[280px] shrink-0 overflow-y-auto max-h-[calc(100vh-14rem)]">
+          <RecipeSidebar recipes={sidebarRecipes} searchString={searchString} onSearchChange={setSearchString} />
         </aside>
-        <div className="flex-1 min-w-0 sticky top-24 self-start">
+        <div className="flex-1 min-w-0 overflow-y-auto max-h-[calc(100vh-14rem)]">
           <CalendarGrid
             days={days}
             plan={weekPlan}

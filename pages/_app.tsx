@@ -5,6 +5,15 @@ import * as React from "react";
 import { AppLayout } from "../components/app-layout";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import type { NextWebVitalsMetric } from "next/app";
+import { initOtel } from "../lib/otel/init";
+import { setupAxiosInstrumentation } from "../lib/otel/axios";
+import { webVitalHistogram } from "../lib/otel/metrics";
+
+if (typeof window !== "undefined") {
+  initOtel();
+  setupAxiosInstrumentation();
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,6 +49,13 @@ function KitchenCalm(props: IKitchenCalmProps) {
       </SessionProvider>
     </QueryClientProvider>
   );
+}
+
+export function reportWebVitals(metric: NextWebVitalsMetric): void {
+  webVitalHistogram.record(metric.value, {
+    "web_vital.name": metric.name,
+    "web_vital.label": metric.label,
+  });
 }
 
 export default KitchenCalm;

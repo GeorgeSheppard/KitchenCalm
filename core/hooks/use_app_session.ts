@@ -1,7 +1,8 @@
 import { signOut, useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { CustomSession } from "../../pages/api/auth/[...nextauth]";
-import { setPreviouslyAuthenticated } from "./auth_flag";
+import { idbDelete } from "../storage/indexed_db";
+import { RECIPES_CACHE_KEY, MEAL_PLAN_CACHE_KEY } from "../storage/cache_keys";
 
 export const useAppSession = () => {
   const session = useSession();
@@ -15,9 +16,11 @@ export const useAppSession = () => {
   }, [data?.error]);
 
   useEffect(() => {
-    if (session.status === "loading") return;
-    setPreviouslyAuthenticated(isAuthenticated);
-  }, [session.status, isAuthenticated]);
+    if (session.status === "unauthenticated") {
+      idbDelete(RECIPES_CACHE_KEY);
+      idbDelete(MEAL_PLAN_CACHE_KEY);
+    }
+  }, [session.status]);
 
   return {
     id: data?.id,

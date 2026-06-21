@@ -2,14 +2,12 @@
  * Wrapper hooks around Orval-generated hooks
  * Simplifies the interface by extracting data from responses
  * Authentication is handled automatically via session cookies
+ * Persistence is handled automatically by React Query's persister
  */
 
 import { UseQueryOptions } from '@tanstack/react-query';
 import { AxiosRequestConfig } from 'axios';
-import { useEffect } from 'react';
 import { useAppSession } from '../core/hooks/use_app_session';
-import { idbSet } from '../core/storage/indexed_db';
-import { RECIPES_CACHE_KEY, MEAL_PLAN_CACHE_KEY } from '../core/storage/cache_keys';
 import {
   useGetKitchencalmRecipes as useGetKitchencalmRecipesBase,
   useGetKitchencalmMealPlan as useGetKitchencalmMealPlanBase,
@@ -39,21 +37,13 @@ export const useGetRecipes = (
 ) => {
   const { isAuthenticated } = useAppSession();
 
-  const query = useGetKitchencalmRecipesBase({
+  return useGetKitchencalmRecipesBase({
     query: {
       ...options?.query,
       enabled: (options?.query?.enabled ?? true) && isAuthenticated,
     },
     request: options?.axios,
   });
-
-  useEffect(() => {
-    if (query.data !== undefined) {
-      idbSet(RECIPES_CACHE_KEY, query.data);
-    }
-  }, [query.data]);
-
-  return query;
 };
 
 /**
@@ -68,21 +58,13 @@ export const useGetMealPlan = (
 ) => {
   const { isAuthenticated } = useAppSession();
 
-  const query = useGetKitchencalmMealPlanBase({
+  return useGetKitchencalmMealPlanBase({
     query: {
       ...options?.query,
       enabled: (options?.query?.enabled ?? true) && isAuthenticated,
     },
     request: options?.axios,
   });
-
-  useEffect(() => {
-    if (query.data !== undefined) {
-      idbSet(MEAL_PLAN_CACHE_KEY, query.data);
-    }
-  }, [query.data]);
-
-  return query;
 };
 
 /**

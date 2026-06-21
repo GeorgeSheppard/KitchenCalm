@@ -9,10 +9,6 @@ import { getRecipesQueryKey, getMealPlanQueryKey } from "../../client/hooks";
  * can render instantly on first paint, without waiting for auth to resolve
  * or the network request to complete.
  *
- * It doesn't matter whose data this is or whether the session is still
- * valid - we just show whatever is cached. useAppSession clears IndexedDB
- * on sign out, so by the time this runs there's nothing left to show for a
- * logged-out user.
  *
  * If a real query response is already cached (e.g. from a previous fetch
  * this session) it takes priority and the IndexedDB value is ignored.

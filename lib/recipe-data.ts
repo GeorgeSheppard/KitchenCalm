@@ -28,7 +28,7 @@ const sampleRecipe: Recipe = {
   title: "Classic Cinnamon Rolls",
   description:
     "Soft, fluffy homemade cinnamon rolls with a buttery cinnamon sugar filling and silky cream cheese frosting. Perfect for weekend brunch or holiday mornings.",
-  image: "/images/cinnamon-rolls.jpg",
+  image: "",
   prepTime: "30 min",
   cookTime: "25 min",
   totalTime: "2 hr 15 min",
@@ -99,7 +99,7 @@ const pastaCarbonaraRecipe: Recipe = {
   title: "Spaghetti Carbonara",
   description:
     "A rich, creamy Italian classic made with eggs, pecorino romano, crispy pancetta, and freshly cracked black pepper. Simple ingredients, extraordinary flavor.",
-  image: "/images/pasta-carbonara.jpg",
+  image: "",
   prepTime: "10 min",
   cookTime: "20 min",
   totalTime: "30 min",
@@ -133,7 +133,7 @@ const greekSaladRecipe: Recipe = {
   title: "Classic Greek Salad",
   description:
     "A refreshing Mediterranean salad with ripe tomatoes, crisp cucumbers, tangy feta, and a bright lemon-oregano vinaigrette. Ready in minutes.",
-  image: "/images/greek-salad.jpg",
+  image: "",
   prepTime: "15 min",
   cookTime: "0 min",
   totalTime: "15 min",
@@ -176,7 +176,7 @@ const chickenStirFryRecipe: Recipe = {
   title: "Teriyaki Chicken Stir-Fry",
   description:
     "A quick weeknight dinner with tender chicken, crisp vegetables, and a glossy homemade teriyaki glaze served over steamed rice.",
-  image: "/images/chicken-stir-fry.jpg",
+  image: "",
   prepTime: "15 min",
   cookTime: "15 min",
   totalTime: "30 min",
@@ -224,7 +224,7 @@ const blueberryPancakesRecipe: Recipe = {
   title: "Fluffy Blueberry Pancakes",
   description:
     "Light, airy buttermilk pancakes studded with juicy blueberries. A perfect lazy weekend breakfast topped with butter and real maple syrup.",
-  image: "/images/blueberry-pancakes.jpg",
+  image: "",
   prepTime: "10 min",
   cookTime: "15 min",
   totalTime: "25 min",

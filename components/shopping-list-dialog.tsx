@@ -13,7 +13,6 @@ import {
   useGetKitchencalmShoppingList,
   GetKitchencalmShoppingList200Item,
 } from "../client/generated/hooks";
-import { useAppSession } from "../core/hooks/use_app_session";
 
 interface ShoppingListDialogProps {
   selectedDates: Set<string>;
@@ -74,15 +73,13 @@ export function ShoppingListDialog({ selectedDates }: ShoppingListDialogProps) {
     return String(date.getTime());
   });
 
-  const { accessToken } = useAppSession();
   const { refetch, isFetching } = useGetKitchencalmShoppingList(
     dates.length > 0 ? { dates } : undefined,
     {
       query: {
         enabled: false,
       },
-      axios: {
-        headers: accessToken ? { authorization: `Bearer ${accessToken}` } : {},
+      request: {
         paramsSerializer: (params) => {
           const searchParams = new URLSearchParams();
           for (const [key, value] of Object.entries(params as Record<string, unknown>)) {
@@ -100,8 +97,8 @@ export function ShoppingListDialog({ selectedDates }: ShoppingListDialogProps) {
 
   const handleCreate = async () => {
     const result = await refetch();
-    if (result.data?.data) {
-      setShoppingList(result.data.data);
+    if (result.data) {
+      setShoppingList(result.data);
     }
   };
 

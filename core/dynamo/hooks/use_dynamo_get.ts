@@ -1,6 +1,6 @@
 import { mealPlanEmptyState } from "../../meal_plan/meal_plan_utilities";
-import { IRecipe, IRecipes, RecipeUuid } from "../../types/recipes";
-import { NewRecipe } from "../../../pages/food/[recipeUuid]";
+import { IRecipes, RecipeUuid } from "../../types/recipes";
+import { NewRecipe } from "../../../src/pages/food/RecipeFormPage";
 import { useAppSession } from "../../hooks/use_app_session";
 import { useGetKitchencalmRecipes, useGetKitchencalmMealPlan } from "../../../client/hooks";
 import { UseQueryResult } from "@tanstack/react-query";
@@ -32,12 +32,6 @@ const useRecipesBase = <T>({
 export const useRecipes = () => {
   return useRecipesBase({
     select: (data) => Array.from(data.values()),
-  });
-};
-
-export const useRecipeIds = () => {
-  return useRecipesBase({
-    select: (data) => Array.from(data.keys()),
   });
 };
 

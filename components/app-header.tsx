@@ -1,15 +1,13 @@
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useAppSession } from "../core/hooks/use_app_session";
-import { signIn, signOut } from "next-auth/react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/src/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { LogIn, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CreateMcpTokenButton } from "./create-mcp-token-button";
 
 export function AppHeader() {
-  const session = useAppSession();
-  const router = useRouter();
+  const { isAuthenticated, isLoading, signIn, signOut } = useAuth();
+  const location = useLocation();
 
   const navLinks = [
     { href: "/food", label: "Recipes" },
@@ -20,14 +18,12 @@ export function AppHeader() {
     <header className="border-b border-border bg-card">
       {/* First row: Logo and Auth buttons */}
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <Link href="/food" passHref>
-          <span className="font-serif text-xl text-primary cursor-pointer">
-            KitchenCalm
-          </span>
+        <Link to="/food" className="font-serif text-xl text-primary cursor-pointer">
+          KitchenCalm
         </Link>
 
         <div className="flex items-center gap-1">
-          {session.loading ? null : session.id ? (
+          {isLoading ? null : isAuthenticated ? (
             <>
               <CreateMcpTokenButton />
               <Button
@@ -44,7 +40,7 @@ export function AppHeader() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => signIn("cognito")}
+              onClick={() => signIn()}
               className="text-muted-foreground"
             >
               <LogIn className="size-4 mr-2" />
@@ -61,20 +57,20 @@ export function AppHeader() {
             {navLinks.map((link) => {
               const isActive =
                 link.href === "/food"
-                  ? router.pathname === "/food"
-                  : router.pathname.startsWith(link.href);
+                  ? location.pathname === "/food"
+                  : location.pathname.startsWith(link.href);
               return (
-                <Link key={link.href} href={link.href} passHref>
-                  <span
-                    className={cn(
-                      "text-sm px-3 py-2 cursor-pointer transition-colors border-b-2",
-                      isActive
-                        ? "border-primary text-primary font-medium"
-                        : "border-transparent text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {link.label}
-                  </span>
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className={cn(
+                    "text-sm px-3 py-2 cursor-pointer transition-colors border-b-2",
+                    isActive
+                      ? "border-primary text-primary font-medium"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {link.label}
                 </Link>
               );
             })}

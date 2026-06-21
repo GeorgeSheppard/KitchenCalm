@@ -1,36 +1,14 @@
-import { IRecipe, IRecipes } from "../../../core/types/recipes";
 import {
   IAddOrUpdatePlan,
   addOrUpdatePlan,
 } from "../../meal_plan/meal_plan_utilities";
 import { IMealPlan } from "../../types/meal_plan";
-import { useAppSession } from "../../hooks/use_app_session";
 import {
   useUpdateMealPlan,
-  getRecipesQueryKey,
   getMealPlanQueryKey,
 } from "../../../client/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 
-const useMutateRecipeInCache = () => {
-  const queryClient = useQueryClient();
-  const recipesKey = getRecipesQueryKey();
-
-  return (recipe: IRecipe) => {
-    const previousRecipes: IRecipes | undefined =
-      queryClient.getQueryData(recipesKey);
-
-    if (previousRecipes) {
-      const updatedRecipes = new Map(previousRecipes);
-      updatedRecipes.set(recipe.uuid, recipe);
-      queryClient.setQueryData(recipesKey, updatedRecipes);
-    }
-
-    return {
-      undo: () => queryClient.setQueryData(recipesKey, previousRecipes),
-    };
-  };
-};
 
 const useMutateMealPlanInCache = () => {
   const queryClient = useQueryClient();
@@ -39,9 +17,7 @@ const useMutateMealPlanInCache = () => {
   return (newMealPlan: IMealPlan) => {
     const previousMealPlan = queryClient.getQueryData(mealPlanKey);
 
-    // Wrap in { data: ... } to match the AxiosResponse shape that
-    // useGetMealPlan's select function expects
-    queryClient.setQueryData(mealPlanKey, { data: newMealPlan });
+    queryClient.setQueryData(mealPlanKey, newMealPlan);
 
     return {
       undo: () => {
@@ -61,8 +37,7 @@ export const usePutMealPlanToDynamo = () => {
   return {
     ...updateMealPlan,
     mutate: (update: IAddOrUpdatePlan) => {
-      const cachedData = queryClient.getQueryData(mealPlanKey) as any;
-      const currentMealPlan = cachedData?.data as IMealPlan | undefined;
+      const currentMealPlan = queryClient.getQueryData(mealPlanKey) as IMealPlan | undefined;
       if (!currentMealPlan || !Array.isArray(currentMealPlan)) throw new Error('Cannot modify empty meal plan')
       const updatedMealPlan = addOrUpdatePlan(currentMealPlan, update);
       mutate(updatedMealPlan);

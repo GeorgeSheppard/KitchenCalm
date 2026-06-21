@@ -24,7 +24,7 @@ export interface Recipe {
   notes?: string[]
 }
 
-export const sampleRecipe: Recipe = {
+const sampleRecipe: Recipe = {
   title: "Classic Cinnamon Rolls",
   description:
     "Soft, fluffy homemade cinnamon rolls with a buttery cinnamon sugar filling and silky cream cheese frosting. Perfect for weekend brunch or holiday mornings.",
@@ -95,7 +95,7 @@ export const sampleRecipe: Recipe = {
   ],
 }
 
-export const pastaCarbonaraRecipe: Recipe = {
+const pastaCarbonaraRecipe: Recipe = {
   title: "Spaghetti Carbonara",
   description:
     "A rich, creamy Italian classic made with eggs, pecorino romano, crispy pancetta, and freshly cracked black pepper. Simple ingredients, extraordinary flavor.",
@@ -129,7 +129,7 @@ export const pastaCarbonaraRecipe: Recipe = {
   ],
 }
 
-export const greekSaladRecipe: Recipe = {
+const greekSaladRecipe: Recipe = {
   title: "Classic Greek Salad",
   description:
     "A refreshing Mediterranean salad with ripe tomatoes, crisp cucumbers, tangy feta, and a bright lemon-oregano vinaigrette. Ready in minutes.",
@@ -172,7 +172,7 @@ export const greekSaladRecipe: Recipe = {
   ],
 }
 
-export const chickenStirFryRecipe: Recipe = {
+const chickenStirFryRecipe: Recipe = {
   title: "Teriyaki Chicken Stir-Fry",
   description:
     "A quick weeknight dinner with tender chicken, crisp vegetables, and a glossy homemade teriyaki glaze served over steamed rice.",
@@ -220,7 +220,7 @@ export const chickenStirFryRecipe: Recipe = {
   ],
 }
 
-export const blueberryPancakesRecipe: Recipe = {
+const blueberryPancakesRecipe: Recipe = {
   title: "Fluffy Blueberry Pancakes",
   description:
     "Light, airy buttermilk pancakes studded with juicy blueberries. A perfect lazy weekend breakfast topped with butter and real maple syrup.",

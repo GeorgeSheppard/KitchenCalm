@@ -9,7 +9,10 @@
       "Bash(yarn generate:api)",
       "Bash(curl:*)",
       "Bash(yarn remove:*)",
-      "Bash(yarn build)"
+      "Bash(yarn build)",
+      "Bash(yarn add:*)",
+      "Bash(yarn analyze)",
+      "Bash(yarn analyze:unused)"
     ]
   }
 }

@@ -9,18 +9,20 @@ import {
   getGetKitchencalmMealPlanQueryKey,
 } from "../../../../client/generated/hooks";
 
-jest.mock("../../../../core/hooks/use_app_session", () => ({
+import { vi } from 'vitest';
+
+vi.mock("../../../../core/hooks/use_app_session", () => ({
   useAppSession: () => ({ loading: false, accessToken: "test-token" }),
 }));
 
-const mockDeleteMutateAsync = jest.fn();
-jest.mock("../../../../client/hooks", () => {
-  const actual = jest.requireActual("../../../../client/hooks");
+const mockDeleteMutateAsync = vi.fn();
+vi.mock("../../../../client/hooks", async () => {
+  const actual = await vi.importActual("../../../../client/hooks");
   return {
     ...actual,
     useDeleteRecipe: () => ({
       mutateAsync: mockDeleteMutateAsync,
-      mutate: jest.fn(),
+      mutate: vi.fn(),
     }),
   };
 });

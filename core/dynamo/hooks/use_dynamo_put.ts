@@ -34,10 +34,6 @@ export const usePutMealPlanToDynamo = () => {
 
   const updateMealPlan = useUpdateMealPlan();
 
-  const onSettled = () => {
-    queryClient.invalidateQueries({ queryKey: mealPlanKey });
-  };
-
   return {
     ...updateMealPlan,
     mutate: (update: IAddOrUpdatePlan) => {
@@ -45,11 +41,11 @@ export const usePutMealPlanToDynamo = () => {
       if (!currentMealPlan || !Array.isArray(currentMealPlan)) throw new Error('Cannot modify empty meal plan')
       const updatedMealPlan = addOrUpdatePlan(currentMealPlan, update);
       mutate(updatedMealPlan);
-      updateMealPlan.mutate(updatedMealPlan, { onSettled });
+      updateMealPlan.mutate(updatedMealPlan);
     },
     mutatePlan: (newMealPlan: IMealPlan) => {
       mutate(newMealPlan);
-      updateMealPlan.mutate(newMealPlan, { onSettled });
+      updateMealPlan.mutate(newMealPlan);
     },
   };
 };
